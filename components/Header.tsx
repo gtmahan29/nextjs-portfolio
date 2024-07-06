@@ -62,7 +62,7 @@ const Header = () => {
             <Image src="/assets/menu.svg" alt="" width={50} height={50} />
             {open && (
               <div
-                className="absolute md:hidden top-12 right-0 z-[9999] bg-[00000070] backdrop-blur-lg border border-white/20 rounded-xl w-60"
+                className="absolute md:hidden top-12 right-0 z-[9999] bg-[#00000070] backdrop-blur-lg border border-white/20 rounded-xl w-60"
                 onClick={handleClose}
                 id="screen"
               >
