@@ -113,7 +113,7 @@ export const BentoGridItem = ({
         )}
 
         {id === 3 && (
-          <div className="absolute -right-12 md:right-4 -top-8 md:top-0 z-50 w-[80%] h-80 md:w-[60%] md:h-full">
+          <div className="absolute -right-12 md:right-4 -top-8 md:top-0 z-50 w-[45%] h-80 md:w-[60%] md:h-full">
             <Image src="/assets/tech.svg" alt="" fill />
           </div>
         )}

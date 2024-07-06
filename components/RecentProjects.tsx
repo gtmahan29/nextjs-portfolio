@@ -23,15 +23,15 @@ const RecentProjects = () => {
         A Small Selection of{" "}
         <span className="text-[#FFFF99]">Recent Projects</span>
       </h2>
-      <div className="flex flex-wrap items-center justify-center p-4 gap-x-24 gap-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 items-center justify-center p-4 gap-x-24 gap-y-8">
         {projects.map(({ id, title, des, img, iconLists, link }) => (
           <div
             key={id}
-            className="lg:min-h-[32.5rem] flex items-center justify-center sm:w-[570px] w-[80vw] h-[32rem] sm:h-[41rem] "
+            className="lg:min-h-[36rem] flex items-center justify-center h-[36rem] sm:h-[36rem] "
           >
             <PinContainer title={link} href={link}>
               <div>
-                <div className="relative flex items-center justify-center sm:w-[570px] w-[80vw] overflow-hidden sm:h-[40vh] h-[30vh mb-10">
+                <div className="relative flex items-center justify-center sm:w-[570px] w-[80vw] overflow-hidden sm:h-[25rem] h-[25rem] mb-10">
                   <Image
                     src={img}
                     fill
