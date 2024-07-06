@@ -88,22 +88,20 @@ export const BentoGridItem = ({
       </div>
       <div
         className={`${cn(
-          "transition duration-200 relative md:h-full min-h-40 flex flex-col px-5 p-5",
+          "transition duration-200 relative md:h-full min-h-40 flex flex-col px-5 p-5"
         )} ${id === 2 ? "!p-0 items-center justify-center" : ""}`}
       >
         <div className="font-sans font-extralight text-[#c1c2d3] text-sm md:text-xs lg:text-base z-10">
           {description}
         </div>
         <div
-          className={`${
-            id === 2 ? "max-w-[unset]" : "max-w-96"
-          } ${
-            id === 3 ? "w-80" : ""
+          className={`${id === 2 ? "max-w-[unset]" : "max-w-96"} ${
+            id !== 3 ? "" : "w-44 lg:w-80"
           } font-sans font-bold text-lg lg:text-3xl z-10`}
         >
           {title}
         </div>
-        
+
         {id === 4 && <GlobeDemo />}
 
         {id === 5 && (
@@ -113,7 +111,7 @@ export const BentoGridItem = ({
         )}
 
         {id === 3 && (
-          <div className="absolute -right-12 md:right-4 -top-8 md:top-0 z-50 w-[45%] h-80 md:w-[60%] md:h-full">
+          <div className="absolute right-0 md:right-4 -top-20 md:top-0 z-50 w-[45%] h-80 md:w-[60%] md:h-full">
             <Image src="/assets/tech.svg" alt="" fill />
           </div>
         )}
