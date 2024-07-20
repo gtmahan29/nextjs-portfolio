@@ -98,9 +98,11 @@ export const InfiniteMovingCards = ({
               <div className="flex flex-col gap-4">
                 <div className="relative z-20 flex gap-4 items-center">
                   <div className=" rounded-full">
-                    {item.image ? <Image src={item.image} alt="" width={50} height={50} /> : <FaRegUserCircle size={20}/>}
-                    
-
+                    {item.image ? (
+                      <Image src={item.image} alt="" width={50} height={50} />
+                    ) : (
+                      <FaRegUserCircle size={44} />
+                    )}
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className=" text-[16px] leading-[1.6] text-white font-bold">

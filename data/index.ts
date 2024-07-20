@@ -30,7 +30,8 @@ export const gridItems = [
   },
   {
     id: 3,
-    title: "Debugging life, one skill at a time: My ever-growing tech repertoire",
+    title:
+      "Debugging life, one skill at a time: My ever-growing tech repertoire",
     description: "I constantly try to improve",
     className: "lg:col-span-3 md:col-span-6 md:row-span-3 lg:min-h-[60vh]",
     imgClassName: "",
@@ -101,28 +102,24 @@ export const testimonials = [
       "Mahan is a true web design wizard! They took my vision and turned it into an absolutely stunning website that has helped take my small business to the next level. I can't recommend them highly enough.",
     name: "Samantha Rodriguez",
     title: "Small Business Owner",
-    image: "/profile.svg",
   },
   {
     quote:
       "Working with Mahan was a game-changer for my business. They designed a website that is not only beautiful, but also highly optimized for lead generation. The boost in traffic and conversions has been incredible. Hire them if you want real results!",
     name: "Liam Nguyen",
     title: "Marketing Consultant",
-    image: "/profile.svg",
   },
   {
     quote:
       "Mahan is a web design superhero! They created an engaging and user-friendly website that has helped us reach so many more people in our community. The entire process was smooth and stress-free. I'm thrilled with the end product.",
     name: "Olivia Hernandez",
     title: "Non-Profit Coordinator",
-    image: "/profile.svg",
   },
   {
     quote:
       "As an ecommerce business owner, I needed a website that could showcase my products in the best light. Mahan delivered just that and more. Their design skills are unparalleled, and they were able to optimize the site for maximum conversions. I've seen a huge boost in sales since launching the new website.",
     name: "Noah Gonzalez",
     title: "Ecommerce Entrepreneur",
-    image: "/profile.svg",
   },
 ];
 
@@ -194,26 +191,26 @@ export const socialMedia = [
   {
     id: 1,
     img: "/assets/instagram.svg",
-    link: "#instagram"
+    link: "#instagram",
   },
   {
     id: 2,
     img: "/assets/twitter.svg",
-    link: "#twitter"
+    link: "#twitter",
   },
   {
     id: 3,
     img: "/assets/github.svg",
-    link: "#github"
+    link: "#github",
   },
   {
     id: 4,
     img: "/assets/telegram.svg",
-    link: "#telegram"
+    link: "#telegram",
   },
   {
     id: 5,
     img: "/assets/whatsapp.svg",
-    link: "#whatsapp"
+    link: "#whatsapp",
   },
 ];
