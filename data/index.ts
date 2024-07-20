@@ -98,37 +98,30 @@ export const projects = [
 export const testimonials = [
   {
     quote:
-      "Collaborating with Adrian was an absolute pleasure. His professionalism, promptness, and dedication to delivering exceptional results were evident throughout our project. Adrian's enthusiasm for every facet of development truly stands out. If you're seeking to elevate your website and elevate your brand, Adrian is the ideal partner.",
-    name: "Michael Johnson",
-    title: "Director of AlphaStream Technologies",
+      "Mahan is a true web design wizard! They took my vision and turned it into an absolutely stunning website that has helped take my small business to the next level. I can't recommend them highly enough.",
+    name: "Samantha Rodriguez",
+    title: "Small Business Owner",
     image: "/profile.svg",
   },
   {
     quote:
-      "Collaborating with Adrian was an absolute pleasure. His professionalism, promptness, and dedication to delivering exceptional results were evident throughout our project. Adrian's enthusiasm for every facet of development truly stands out. If you're seeking to elevate your website and elevate your brand, Adrian is the ideal partner.",
-    name: "Michael Johnson",
-    title: "Director of AlphaStream Technologies",
+      "Working with Mahan was a game-changer for my business. They designed a website that is not only beautiful, but also highly optimized for lead generation. The boost in traffic and conversions has been incredible. Hire them if you want real results!",
+    name: "Liam Nguyen",
+    title: "Marketing Consultant",
     image: "/profile.svg",
   },
   {
     quote:
-      "Collaborating with Adrian was an absolute pleasure. His professionalism, promptness, and dedication to delivering exceptional results were evident throughout our project. Adrian's enthusiasm for every facet of development truly stands out. If you're seeking to elevate your website and elevate your brand, Adrian is the ideal partner.",
-    name: "Michael Johnson",
-    title: "Director of AlphaStream Technologies",
+      "Mahan is a web design superhero! They created an engaging and user-friendly website that has helped us reach so many more people in our community. The entire process was smooth and stress-free. I'm thrilled with the end product.",
+    name: "Olivia Hernandez",
+    title: "Non-Profit Coordinator",
     image: "/profile.svg",
   },
   {
     quote:
-      "Collaborating with Adrian was an absolute pleasure. His professionalism, promptness, and dedication to delivering exceptional results were evident throughout our project. Adrian's enthusiasm for every facet of development truly stands out. If you're seeking to elevate your website and elevate your brand, Adrian is the ideal partner.",
-    name: "Michael Johnson",
-    title: "Director of AlphaStream Technologies",
-    image: "/profile.svg",
-  },
-  {
-    quote:
-      "Collaborating with Adrian was an absolute pleasure. His professionalism, promptness, and dedication to delivering exceptional results were evident throughout our project. Adrian's enthusiasm for every facet of development truly stands out. If you're seeking to elevate your website and elevate your brand, Adrian is the ideal partner.",
-    name: "Michael Johnson",
-    title: "Director of AlphaStream Technologies",
+      "As an ecommerce business owner, I needed a website that could showcase my products in the best light. Mahan delivered just that and more. Their design skills are unparalleled, and they were able to optimize the site for maximum conversions. I've seen a huge boost in sales since launching the new website.",
+    name: "Noah Gonzalez",
+    title: "Ecommerce Entrepreneur",
     image: "/profile.svg",
   },
 ];
