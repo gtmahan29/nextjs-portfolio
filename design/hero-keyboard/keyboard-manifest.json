@@ -1,0 +1,891 @@
+{
+  "name": "Opal 65",
+  "pitchMeters": 0.01905,
+  "rgbControl": "RGB_Control.RGB",
+  "keys": [
+    {
+      "node": "Key_Escape",
+      "code": "Escape",
+      "legend": "esc",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        -7.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_1",
+      "code": "1",
+      "legend": "1",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        -6.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_2",
+      "code": "2",
+      "legend": "2",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        -5.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_3",
+      "code": "3",
+      "legend": "3",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        -4.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_4",
+      "code": "4",
+      "legend": "4",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        -3.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_5",
+      "code": "5",
+      "legend": "5",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        -2.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_6",
+      "code": "6",
+      "legend": "6",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        -1.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_7",
+      "code": "7",
+      "legend": "7",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        -0.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_8",
+      "code": "8",
+      "legend": "8",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        0.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_9",
+      "code": "9",
+      "legend": "9",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        1.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_0",
+      "code": "0",
+      "legend": "0",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        2.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Minus",
+      "code": "Minus",
+      "legend": "−",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        3.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Equal",
+      "code": "Equal",
+      "legend": "=",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        4.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Backspace",
+      "code": "Backspace",
+      "legend": "← backspace",
+      "row": 0,
+      "units": 2,
+      "rest": [
+        6.0,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Home",
+      "code": "Home",
+      "legend": "home",
+      "row": 0,
+      "units": 1,
+      "rest": [
+        7.5,
+        2,
+        1.015
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Tab",
+      "code": "Tab",
+      "legend": "tab",
+      "row": 1,
+      "units": 1.5,
+      "rest": [
+        -7.25,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Q",
+      "code": "Q",
+      "legend": "Q",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        -6.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_W",
+      "code": "W",
+      "legend": "W",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        -5.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_E",
+      "code": "E",
+      "legend": "E",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        -4.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_R",
+      "code": "R",
+      "legend": "R",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        -3.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_T",
+      "code": "T",
+      "legend": "T",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        -2.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Y",
+      "code": "Y",
+      "legend": "Y",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        -1.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_U",
+      "code": "U",
+      "legend": "U",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        0.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_I",
+      "code": "I",
+      "legend": "I",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        1.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_O",
+      "code": "O",
+      "legend": "O",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        2.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_P",
+      "code": "P",
+      "legend": "P",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        3.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_BracketLeft",
+      "code": "BracketLeft",
+      "legend": "[",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        4.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_BracketRight",
+      "code": "BracketRight",
+      "legend": "]",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        5.0,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Backslash",
+      "code": "Backslash",
+      "legend": "\\",
+      "row": 1,
+      "units": 1.5,
+      "rest": [
+        6.25,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_PageUp",
+      "code": "PageUp",
+      "legend": "page\nup",
+      "row": 1,
+      "units": 1,
+      "rest": [
+        7.5,
+        1,
+        0.99
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_CapsLock",
+      "code": "CapsLock",
+      "legend": "caps lock",
+      "row": 2,
+      "units": 1.75,
+      "rest": [
+        -7.125,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_A",
+      "code": "A",
+      "legend": "A",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        -5.75,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_S",
+      "code": "S",
+      "legend": "S",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        -4.75,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_D",
+      "code": "D",
+      "legend": "D",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        -3.75,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_F",
+      "code": "F",
+      "legend": "F",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        -2.75,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_G",
+      "code": "G",
+      "legend": "G",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        -1.75,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_H",
+      "code": "H",
+      "legend": "H",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        -0.75,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_J",
+      "code": "J",
+      "legend": "J",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        0.25,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_K",
+      "code": "K",
+      "legend": "K",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        1.25,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_L",
+      "code": "L",
+      "legend": "L",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        2.25,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Semicolon",
+      "code": "Semicolon",
+      "legend": ";",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        3.25,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Quote",
+      "code": "Quote",
+      "legend": "'",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        4.25,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Enter",
+      "code": "Enter",
+      "legend": "↵ enter",
+      "row": 2,
+      "units": 2.25,
+      "rest": [
+        5.875,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_PageDown",
+      "code": "PageDown",
+      "legend": "page\ndown",
+      "row": 2,
+      "units": 1,
+      "rest": [
+        7.5,
+        0,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_ShiftLeft",
+      "code": "ShiftLeft",
+      "legend": "shift",
+      "row": 3,
+      "units": 2.25,
+      "rest": [
+        -6.875,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Z",
+      "code": "Z",
+      "legend": "Z",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        -5.25,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_X",
+      "code": "X",
+      "legend": "X",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        -4.25,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_C",
+      "code": "C",
+      "legend": "C",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        -3.25,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_V",
+      "code": "V",
+      "legend": "V",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        -2.25,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_B",
+      "code": "B",
+      "legend": "B",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        -1.25,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_N",
+      "code": "N",
+      "legend": "N",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        -0.25,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_M",
+      "code": "M",
+      "legend": "M",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        0.75,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Comma",
+      "code": "Comma",
+      "legend": ",",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        1.75,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Period",
+      "code": "Period",
+      "legend": ".",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        2.75,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Slash",
+      "code": "Slash",
+      "legend": "/",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        3.75,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_ShiftRight",
+      "code": "ShiftRight",
+      "legend": "shift",
+      "row": 3,
+      "units": 1.75,
+      "rest": [
+        5.125,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_ArrowUp",
+      "code": "ArrowUp",
+      "legend": "↑",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        6.5,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_End",
+      "code": "End",
+      "legend": "end",
+      "row": 3,
+      "units": 1,
+      "rest": [
+        7.5,
+        -1,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_ControlLeft",
+      "code": "ControlLeft",
+      "legend": "control",
+      "row": 4,
+      "units": 1.25,
+      "rest": [
+        -7.375,
+        -2,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_AltLeft",
+      "code": "AltLeft",
+      "legend": "option",
+      "row": 4,
+      "units": 1.25,
+      "rest": [
+        -6.125,
+        -2,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_MetaLeft",
+      "code": "MetaLeft",
+      "legend": "command",
+      "row": 4,
+      "units": 1.25,
+      "rest": [
+        -4.875,
+        -2,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Space",
+      "code": "Space",
+      "legend": "",
+      "row": 4,
+      "units": 6.25,
+      "rest": [
+        -1.125,
+        -2,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_MetaRight",
+      "code": "MetaRight",
+      "legend": "⌘",
+      "row": 4,
+      "units": 1,
+      "rest": [
+        2.5,
+        -2,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Fn1",
+      "code": "Fn1",
+      "legend": "fn1",
+      "row": 4,
+      "units": 1,
+      "rest": [
+        3.5,
+        -2,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_Fn2",
+      "code": "Fn2",
+      "legend": "fn2",
+      "row": 4,
+      "units": 1,
+      "rest": [
+        4.5,
+        -2,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_ArrowLeft",
+      "code": "ArrowLeft",
+      "legend": "←",
+      "row": 4,
+      "units": 1,
+      "rest": [
+        5.5,
+        -2,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_ArrowDown",
+      "code": "ArrowDown",
+      "legend": "↓",
+      "row": 4,
+      "units": 1,
+      "rest": [
+        6.5,
+        -2,
+        0.965
+      ],
+      "travel": 0.24
+    },
+    {
+      "node": "Key_ArrowRight",
+      "code": "ArrowRight",
+      "legend": "→",
+      "row": 4,
+      "units": 1,
+      "rest": [
+        7.5,
+        -2,
+        0.965
+      ],
+      "travel": 0.24
+    }
+  ]
+}

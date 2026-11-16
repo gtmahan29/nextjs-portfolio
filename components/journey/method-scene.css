@@ -1,0 +1,254 @@
+/* =====================================================================
+   "Work directly with me." One line between you and the work.
+
+   The same sky the journey opens into: cool paper-blue air, navy ink,
+   white glass. No brass, no cream. The runtime (method-scene.tsx) places
+   every node and writes --e / --x on the copy, --m on the morphing disc
+   and --c on the call to action. CSS only turns those into shape.
+   ===================================================================== */
+
+.jny-root .jny-chapters .jny-closing.jw {
+  --jw-ink: #132034;
+  --jw-muted: #56667c;
+  --jw-dim: #8d9bb0;
+  --jw-d: 84px;
+  --jw-ph: 46px;
+  --jw-gx: clamp(22px, 6vw, 112px);
+  position: relative;
+  height: 400svh;
+  padding: 0;
+  background:
+    radial-gradient(70% 46% at 50% 70%, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, #f4f7fb 0%, #e4ecf4 46%, #d2deea 100%);
+  color: var(--jw-ink);
+  scroll-margin-top: 0;
+}
+
+.jw-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 600px;
+  overflow: hidden;
+}
+
+/* ---------- copy: one block on stage at a time ---------- */
+.jw-copy {
+  position: absolute;
+  inset: clamp(98px, 14svh, 156px) var(--jw-gx) auto;
+  display: grid;
+  pointer-events: none;
+}
+.jw-block { grid-area: 1 / 1; max-width: min(820px, 64%); }
+/* The last block sits lower, closer to the button the two nodes become. */
+.jw-block.jw-end { justify-self: center; max-width: 900px; margin-top: clamp(24px, 13svh, 150px); text-align: center; }
+.jw-block.jw-end .jw-more { margin-inline: auto; }
+
+.jny-root .jw-title {
+  margin: 0;
+  font-size: clamp(54px, 7.6vw, 132px);
+  font-weight: 500;
+  line-height: 0.94;
+  letter-spacing: -0.062em;
+  color: var(--jw-ink);
+}
+.jny-root .jw-title .jw-dim { color: var(--jw-dim); }
+.jny-root .jw-say {
+  margin: 0;
+  max-width: 17ch;
+  font-size: clamp(38px, 4.6vw, 82px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.052em;
+  color: var(--jw-ink);
+  text-wrap: balance;
+}
+.jw-end .jw-say { max-width: none; }
+.jny-root :is(.jw-lede, .jw-more) {
+  max-width: 38ch;
+  margin: clamp(18px, 2.6svh, 28px) 0 0;
+  font-size: clamp(16px, 1.15vw, 19px);
+  line-height: 1.55;
+  letter-spacing: -0.008em;
+  color: var(--jw-muted);
+  text-wrap: pretty;
+}
+/* Generous masks so the overshoot is never clipped. */
+.jw .jm-m { padding-bottom: 0.2em; margin-bottom: -0.2em; }
+
+/* ---------- the line and its nodes ---------- */
+.jw-map { position: absolute; inset: 0; pointer-events: none; }
+.jw-wire { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.jw-line {
+  fill: none;
+  stroke: var(--jw-ink);
+  stroke-opacity: 0.38;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.jw-node {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: scale(0);
+  will-change: transform;
+}
+.jw-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--jw-ph);
+  padding: 0 20px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f6fa 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(19, 32, 52, 0.07),
+    inset 0 1px 0 #fff,
+    0 1px 2px rgba(19, 32, 52, 0.06),
+    0 16px 32px -18px rgba(19, 36, 60, 0.42);
+  color: var(--jw-muted);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.jw-pill svg { flex: none; color: var(--jw-ink); }
+
+.jw-chip .jw-pill { height: 40px; padding: 0 16px 0 13px; color: var(--jw-ink); font-size: 14px; }
+.jw-book .jw-pill {
+  height: 44px;
+  padding: 0 18px 0 15px;
+  background: var(--jw-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 18px 36px -18px rgba(19, 32, 52, 0.7);
+  color: #f3f6fb;
+  font-size: 14px;
+}
+.jw-book .jw-pill svg { color: #f3f6fb; }
+
+.jw-disc,
+.jw-dev-body {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  width: var(--jw-d);
+  height: var(--jw-d);
+  border-radius: 999px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.jw-disc {
+  background: radial-gradient(120% 120% at 30% 20%, #ffffff 0%, #eef3f8 70%);
+  box-shadow:
+    inset 0 0 0 1px rgba(19, 32, 52, 0.08),
+    inset 0 -6px 14px rgba(19, 36, 60, 0.06),
+    0 20px 40px -18px rgba(19, 36, 60, 0.5);
+  color: var(--jw-ink);
+  font-size: 17px;
+}
+/* The developer pill and Mahan's disc are one element; --m is the morph. */
+.jw-dev-body {
+  background: color-mix(in srgb, var(--jw-ink) calc(var(--m, 0) * 100%), #f6f8fb);
+  box-shadow:
+    inset 0 0 0 1px rgba(19, 32, 52, calc(0.07 * (1 - var(--m, 0)))),
+    inset 0 1px 0 rgba(255, 255, 255, calc(0.9 - 0.75 * var(--m, 0))),
+    0 20px 40px -18px rgba(19, 36, 60, calc(0.42 + 0.3 * var(--m, 0)));
+}
+.jw-dev-a, .jw-dev-b { grid-area: 1 / 1; display: block; }
+.jw-dev-a { color: var(--jw-muted); font-size: 15px; transform: translate3d(0, calc(var(--m, 0) * var(--jw-d) * -0.8), 0); }
+.jw-dev-b { color: #f3f6fb; font-size: 16px; transform: translate3d(0, calc((1 - var(--m, 0)) * var(--jw-d) * 0.8), 0); }
+.jw-cap {
+  position: absolute;
+  left: 0;
+  top: calc(var(--jw-d) / 2 + 16px);
+  translate: -50% 0;
+  color: var(--jw-muted);
+  font-size: 13.5px;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+}
+
+/* ---------- the call to action the two become ---------- */
+.jny-root .jw-cta {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 68px;
+  overflow: hidden;
+  translate: -50% -50%;
+  border-radius: 999px;
+  background: var(--jw-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 26px 50px -22px rgba(19, 32, 52, 0.75);
+  color: #f3f6fb;
+  text-decoration: none;
+  transform: scale(0);
+  visibility: hidden;
+  pointer-events: none;
+}
+.jny-root .jw-cta[data-shown="true"] { visibility: visible; }
+.jny-root .jw-cta[data-live="true"] { pointer-events: auto; }
+.jw-cta-in {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 10px 0 30px;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  scale: 1;
+  transition: scale 0.6s var(--ease-spring, cubic-bezier(0.34, 1.4, 0.64, 1));
+}
+.jw-cta-t, .jw-cta-ic { transform: translate3d(0, calc((1 - clamp(0, (var(--c, 0) - 0.3) / 0.7, 1.2)) * 140%), 0); }
+.jw-cta-ic {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #f3f6fb;
+  color: var(--jw-ink);
+  transition: translate 0.6s var(--ease-spring, cubic-bezier(0.34, 1.4, 0.64, 1)), rotate 0.7s var(--ease-spring, cubic-bezier(0.34, 1.4, 0.64, 1));
+}
+.jny-root .jw-cta:hover .jw-cta-in { scale: 1.03; }
+.jny-root .jw-cta:hover .jw-cta-ic { translate: 3px 0; rotate: -45deg; }
+.jny-root .jw-cta:active .jw-cta-in { scale: 0.97; }
+.jny-root .jw-cta:focus-visible { outline: 3px solid var(--jw-ink); outline-offset: 5px; }
+
+/* ---------- phones: the chain zigzags; owned things gather under you ---------- */
+@media (max-width: 759px) {
+  .jny-root .jny-chapters .jny-closing.jw { --jw-d: 58px; --jw-ph: 34px; --jw-gx: 20px; height: 420svh; }
+  .jw-copy { inset-block-start: 92px; }
+  .jw-block { max-width: 100%; }
+  .jny-root .jw-title { font-size: clamp(46px, 13vw, 64px); }
+  .jny-root .jw-say { font-size: clamp(31px, 8.6vw, 42px); }
+  .jny-root :is(.jw-lede, .jw-more) { font-size: 15px; }
+  .jw-pill { padding: 0 12px; font-size: 12px; gap: 6px; }
+  .jw-chip .jw-pill { height: 32px; padding: 0 11px 0 9px; font-size: 12px; }
+  .jw-chip .jw-pill svg, .jw-book .jw-pill svg { width: 14px; height: 14px; }
+  .jw-book .jw-pill { height: 36px; font-size: 12.5px; }
+  .jw-disc { font-size: 14px; }
+  .jw-dev-a { font-size: 12px; }
+  .jw-dev-b { font-size: 13px; }
+  .jw-cap { width: 112px; font-size: 12px; line-height: 1.3; text-align: center; white-space: normal; top: calc(var(--jw-d) / 2 + 12px); }
+  .jny-root .jw-cta { height: 58px; }
+  .jw-cta-in { gap: 12px; padding: 0 7px 0 22px; font-size: 16px; }
+  .jw-cta-ic { width: 44px; height: 44px; }
+}

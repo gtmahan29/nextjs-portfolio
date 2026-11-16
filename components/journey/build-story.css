@@ -1,0 +1,144 @@
+/* =====================================================================
+   The build (isometric-story.tsx). Every value below is driven by the
+   runtime's --e (arrive) and --x (leave) springs from staged-motion.ts:
+   strokes draw, blocks grow, wipes travel. Nothing fades.
+   ===================================================================== */
+.keyboard-build { position: absolute; inset: 0; isolation: isolate; --bs-spring: var(--ease-spring, cubic-bezier(0.34, 1.4, 0.64, 1)); }
+.keyboard-build .build-keyboard { opacity: 1; }
+/* The board sits on the desk below the display, never across its lower edge. */
+@media (min-width: 701px) { .keyboard-build .build-keyboard { top: 82%; width: min(980px, 90vw, 124svh); } }
+
+/* ---------- the step, set large beside the display ---------- */
+.bs-steps { position: absolute; z-index: 4; left: clamp(28px, 4.5vw, 84px); top: 36%; width: calc(50vw - min(640px, 60vw, 78svh) / 2 - clamp(28px, 4.5vw, 84px) - 32px); translate: 0 -50%; pointer-events: none; }
+.hero-start .bs-step { position: absolute; left: 0; right: 0; top: 0; translate: 0 -50%; margin: 0 !important; color: #0e2236; font-size: clamp(28px, 2.7vw, 48px) !important; font-weight: 500; line-height: 1.02 !important; letter-spacing: -0.045em !important; text-align: left; text-wrap: balance; }
+
+/* ---------- the display ---------- */
+.bs-display { position: absolute; z-index: 2; left: 50%; top: 36%; width: min(640px, 60vw, 78svh); aspect-ratio: 16 / 10; transform: translate(-50%, -50%); }
+.bs-outline { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.bs-outline rect { fill: none; stroke: #0e2236; stroke-width: 1.5; stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--e, 0)); }
+/* The bezel grows out of its own outline, edge by edge, from the centre. */
+.bs-bezel {
+  position: absolute;
+  inset: 0;
+  padding: 1.35%;
+  border-radius: 24px;
+  background: linear-gradient(160deg, #222838 0%, #0c0f17 55%, #151a26 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 50px 90px -40px rgba(14, 34, 60, 0.55), 0 18px 30px -18px rgba(14, 34, 60, 0.35);
+  clip-path: inset(calc((1 - min(1, var(--e, 0))) * 50%) round 24px);
+}
+.bs-screen { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 14px; background: #eef1f6; container-type: size; font-family: var(--font-page), ui-sans-serif, system-ui, sans-serif; }
+
+/* ---------- structure: grid and wireframes ---------- */
+.bs-cols { position: absolute; inset: 0 5%; display: grid; grid-template-columns: repeat(12, 1fr); gap: 1.4%; pointer-events: none; }
+.bs-cols i { background: rgba(48, 74, 245, 0.06); box-shadow: inset 1px 0 rgba(48, 74, 245, 0.16), inset -1px 0 rgba(48, 74, 245, 0.16); transform-origin: 50% 0; transform: scaleY(max(0, calc(var(--e, 0) - var(--x, 0)))); }
+.bs-paint { position: absolute; inset: 0; background: radial-gradient(70% 90% at 78% 30%, #e9e6ff 0%, rgba(233, 230, 255, 0) 70%), #f8f6f2; clip-path: inset(0 calc((1 - min(1, var(--e, 0))) * 100%) 0 0); }
+.bs-site { position: absolute; inset: 0; }
+.bs-el { position: absolute; display: block; }
+.wf {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10%;
+  border-radius: 0.7cqw;
+  background: #d5dbe6;
+  transform-origin: 0 50%;
+  transform: scaleX(max(0, var(--e, 0)));
+  /* Leaving, the wireframe is eaten from the left by its finished element. */
+  clip-path: inset(-2px -2px -2px calc(min(1, var(--x, 0)) * (100% + 4px)));
+}
+.wf b { display: block; flex: 1; border-radius: 0.6cqw; background: #c4ccda; }
+.ds {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  clip-path: inset(-40% calc((1 - min(1, var(--e, 0))) * 100%) -40% -10%);
+  translate: 0 calc((1 - var(--e, 0)) * 0.8cqw);
+  color: #11141b;
+}
+
+/* ---------- the finished page ---------- */
+.el-logo { left: 5%; top: 6.4%; width: 10%; height: 5%; }
+.ds.logo { gap: 0.8cqw; font-size: 1.9cqw; font-weight: 600; letter-spacing: -0.04em; }
+.ds.logo i { width: 2.4cqw; height: 2.4cqw; border-radius: 0.7cqw; background: conic-gradient(from 210deg, #3044f5, #8d5cf6, #ff8a6b, #3044f5); box-shadow: inset 0 0 0 0.25cqw rgba(255, 255, 255, 0.35); }
+.el-links { left: 37%; top: 7.4%; width: 26%; height: 3%; }
+.el-links .wf { flex-direction: row; background: none; gap: 14%; }
+.ds.links { justify-content: space-between; font-size: 1.35cqw; color: #4a5160; }
+.el-nav-btn { right: 5%; top: 5.8%; width: 12%; height: 6.2%; }
+.el-nav-btn .wf { border-radius: 99px; }
+.ds.nav-btn { justify-content: center; border-radius: 99px; background: #11141b; color: #fff; font-size: 1.3cqw; font-weight: 500; }
+
+.el-h1 { left: 5%; top: 21%; width: 46%; height: 27%; }
+.el-h1 .wf { background: none; }
+.ds.h1 { align-items: flex-start; clip-path: none; translate: 0 calc((1 - var(--e, 0)) * 3cqw); scale: max(0, min(1, var(--e, 0))); transform-origin: 0 0; font-size: 8.8cqw; font-weight: 500; line-height: 0.96; letter-spacing: -0.06em; }
+.ds.h1 [data-typed] { white-space: pre-wrap; }
+.ds.h1 .caret { display: inline-block; width: 0.5cqw; height: 7.2cqw; margin: 0.6cqw 0 0 0.4cqw; border-radius: 0.3cqw; background: #3044f5; transform-origin: 50% 100%; animation: bs-caret 1.05s steps(2, jump-none) infinite; }
+.keyboard-build[data-typing="true"] .ds.h1 .caret { animation: none; }
+.keyboard-build[data-stage="complete"] .ds.h1 .caret { transform: scaleY(0); transition: transform 0.6s var(--bs-spring) 0.4s; animation: none; }
+@keyframes bs-caret { 0% { transform: scaleY(1); } 100% { transform: scaleY(0); } }
+
+.el-sub { left: 5%; top: 52%; width: 36%; height: 9%; }
+.ds.sub { font-size: 1.6cqw; line-height: 1.45; color: #545b69; }
+.el-ctas { left: 5%; top: 66%; width: 33%; height: 7%; }
+.el-ctas .wf { flex-direction: row; background: none; gap: 6%; }
+.el-ctas .wf b { border-radius: 99px; }
+.ds.ctas { gap: 1.2cqw; font-size: 1.4cqw; font-weight: 500; }
+.ds.ctas span { display: grid; place-items: center; height: 100%; padding: 0 2.2cqw; border-radius: 99px; }
+.ds.ctas .cta-main { background: #3044f5; color: #fff; box-shadow: 0 1cqw 2cqw -1cqw rgba(48, 68, 245, 0.7); }
+.ds.ctas .cta-alt { box-shadow: inset 0 0 0 1px rgba(17, 20, 27, 0.18); color: #11141b; }
+
+.el-art { right: 5%; top: 17%; width: 41%; height: 63%; }
+.el-art .wf { display: block; border-radius: 1.6cqw; background: #dbe0ea; }
+.el-art .wf svg { width: 100%; height: 100%; }
+.el-art .wf path { fill: none; stroke: #b8c1d1; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.ds.art { display: block; overflow: hidden; border-radius: 1.6cqw; clip-path: none; translate: none; transform-origin: 50% 55%; transform: scale(max(0, var(--e, 0))); }
+.art-bg { position: absolute; inset: 0; background: radial-gradient(60% 60% at 20% 18%, #ffb68f 0%, rgba(255, 182, 143, 0) 70%), radial-gradient(70% 70% at 85% 80%, #8f6bff 0%, rgba(143, 107, 255, 0) 72%), linear-gradient(150deg, #5367ff, #2c34c9); }
+.art-panel { position: absolute; left: 9%; right: 9%; top: 15%; bottom: 13%; display: flex; flex-direction: column; gap: 4%; padding: 5% 6%; border-radius: 1.2cqw; background: rgba(255, 255, 255, 0.9); box-shadow: 0 2cqw 4cqw -2cqw rgba(20, 16, 80, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.7); }
+.art-row { display: flex; align-items: center; gap: 0.8cqw; font-size: 1.25cqw; }
+.art-row i { width: 0.9cqw; height: 0.9cqw; border-radius: 50%; background: #3044f5; }
+.art-row b { font-weight: 600; letter-spacing: -0.02em; }
+.art-row em { margin-left: auto; padding: 0.3cqw 0.8cqw; border-radius: 99px; background: #e7f6ec; color: #1d7a45; font-size: 1cqw; font-style: normal; font-weight: 500; }
+.art-bars { position: relative; flex: 1; display: flex; align-items: flex-end; gap: 4%; }
+.art-bars i { flex: 1; border-radius: 0.5cqw 0.5cqw 0.2cqw 0.2cqw; background: linear-gradient(#cdd4ff, #e9ecff); transform-origin: 50% 100%; transform: scaleY(max(0, var(--e, 0))); }
+.art-bars i:last-child { background: linear-gradient(#3044f5, #7d8bff); }
+.art-line { position: absolute; left: 6%; right: 6%; top: 32%; height: 34%; width: 88%; overflow: visible; pointer-events: none; }
+.art-line path { fill: none; stroke: #ff7a59; stroke-width: 2.2; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--e, 0)); }
+.art-people { display: flex; align-items: center; }
+.art-people i { width: 2.4cqw; height: 2.4cqw; margin-right: -0.7cqw; border-radius: 50%; border: 0.25cqw solid #fff; background: linear-gradient(135deg, #ffcfb2, #ff8e72); }
+.art-people i:nth-child(2) { background: linear-gradient(135deg, #c9d2ff, #6e7dff); }
+.art-people i:nth-child(3) { background: linear-gradient(135deg, #d6f3e1, #4bb57c); }
+.art-people em { margin-left: 1.4cqw; color: #545b69; font-size: 1.1cqw; font-style: normal; }
+.art-live { position: absolute; top: 6%; right: 6%; display: flex; align-items: center; gap: 0.6cqw; padding: 0.6cqw 1.2cqw; border-radius: 99px; background: #11141b; color: #fff; font-size: 1.15cqw; font-weight: 500; transform-origin: 100% 0; transform: scale(max(0, var(--e, 0))); }
+.art-live i { width: 0.8cqw; height: 0.8cqw; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 0.35cqw rgba(74, 222, 128, 0.25); }
+
+.el-logos { left: 5%; right: 5%; bottom: 6.5%; height: 3.6%; }
+.el-logos .wf { flex-direction: row; background: none; gap: 6%; }
+.ds.logos { justify-content: space-between; color: #9aa0ac; font-size: 1.45cqw; font-weight: 600; letter-spacing: -0.03em; }
+.ds.logos span:nth-child(2) { font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; font-size: 1.15cqw; }
+.ds.logos span:nth-child(4) { font-style: italic; }
+
+/* ---------- complete: a cursor glides in and clicks the call to action ---------- */
+.bs-cursor { position: absolute; left: 13.5%; top: 69%; width: 2.6cqw; height: 2.6cqw; z-index: 3; transform: translate3d(calc((1 - var(--e, 0)) * 70cqw), calc((1 - var(--e, 0)) * 45cqh), 0) rotate(calc((1 - var(--e, 0)) * -18deg)); }
+.bs-cursor svg { width: 100%; height: 100%; fill: #11141b; stroke: #fff; stroke-width: 1.4; stroke-linejoin: round; filter: drop-shadow(0 0.4cqw 0.5cqw rgba(0, 0, 0, 0.25)); }
+.bs-click { position: absolute; left: calc(13.5% - 2cqw); top: calc(69% - 2cqw); width: 4cqw; height: 4cqw; z-index: 2; border-radius: 50%; box-shadow: 0 0 0 0.3cqw rgba(48, 68, 245, 0.45); transform: scale(calc(max(0, var(--e, 0)) * 1.6)); pointer-events: none; }
+.keyboard-build[data-stage="complete"] .cta-main { animation: bs-press 0.5s var(--bs-spring) 1.75s both; }
+@keyframes bs-press { 0% { scale: 1; } 30% { scale: 0.92; } 100% { scale: 1; } }
+
+/* ---------- smaller screens: the step sits above the display ---------- */
+@media (max-width: 1180px) {
+  .bs-steps { left: 24px; right: 24px; width: auto; top: clamp(88px, 13svh, 120px); translate: none; }
+  .hero-start .bs-step { text-align: center; translate: none; font-size: clamp(24px, 3.4vw, 34px) !important; }
+  .bs-display { top: 44%; width: min(680px, 80vw, 80svh); }
+}
+@media (max-width: 700px) {
+  .bs-steps { top: 96px; }
+  .hero-start .bs-step { font-size: 26px !important; }
+  .bs-display { top: 40%; width: 92vw; }
+  .bs-bezel { padding: 1.8%; border-radius: 14px; clip-path: inset(calc((1 - min(1, var(--e, 0))) * 50%) round 14px); }
+  .bs-screen { border-radius: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds.h1 .caret, .keyboard-build[data-stage="complete"] .cta-main { animation: none; }
+}

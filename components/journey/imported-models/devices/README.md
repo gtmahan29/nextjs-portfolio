@@ -1,0 +1,1 @@
+These model factories and public/models/showcase-devices textures are self-contained conversions of the supplied 3d-models-4 models. The source folder can be removed. They use the app Three.js dependency, not the demo renderer or embedded vendor libraries.

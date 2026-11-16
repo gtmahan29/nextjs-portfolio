@@ -1,0 +1,387 @@
+/* =====================================================================
+   "Where should I start?": a pinned scroll scene behind the doors.
+   Scroll drives every state change on the shared spring (motion-curve.ts).
+   Nothing fades: elements pop from a point, slide out of masks, or move.
+   Ambient loops run only while the scene is on screen ([data-awake]).
+   ===================================================================== */
+.jny-project-showcase.jny-start {
+  --sp-ink: #0b1220;
+  --sp-muted: #5a6478;
+  --sp-accent: #2433e6;
+  --sp-paper: #eef1f6;
+  --sp-loop: cubic-bezier(0.65, 0, 0.35, 1);
+  --sp-spring: var(--ease-spring, cubic-bezier(0.34, 1.4, 0.64, 1));
+  /* Headline size while centred; --k is the size it docks to. */
+  --tf: clamp(64px, min(11vw, 17svh), 196px);
+  --k: 0.34;
+  justify-content: stretch;
+  padding: clamp(92px, 11svh, 120px) clamp(22px, 5.5vw, 104px) clamp(22px, 4svh, 48px);
+  overflow: hidden;
+  background:
+    radial-gradient(55% 60% at 74% 52%, #ffffff 0%, rgba(255, 255, 255, 0) 72%),
+    radial-gradient(40% 45% at 100% 100%, rgba(36, 51, 230, 0.07) 0%, rgba(36, 51, 230, 0) 70%),
+    var(--sp-paper);
+  color: var(--sp-ink);
+  font-family: var(--font-page), ui-sans-serif, system-ui, sans-serif;
+}
+.sp-frame {
+  position: relative;
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  column-gap: clamp(24px, 4vw, 80px);
+  min-height: 0;
+  width: min(100%, 1360px);
+  margin: 0 auto;
+  padding-top: calc(var(--tf) * 1.84 * var(--k) + 3svh);
+}
+
+/* ---------- headline: opens huge and centred, then zooms out and docks ---------- */
+.sp-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  margin: 0;
+  font-size: var(--tf);
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+  white-space: nowrap;
+  color: var(--sp-ink);
+  transform-origin: 0 0;
+  transform:
+    translate3d(calc(var(--hx, 0px) * (1 - var(--d, 1))), calc(var(--hy, 0px) * (1 - var(--d, 1))), 0)
+    scale(calc(1 - (1 - var(--k)) * var(--d, 1)));
+}
+.sp-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding: 0.06em 0.05em 0.12em;
+  margin: -0.06em -0.05em -0.12em;
+}
+.sp-title > .sp-mask:nth-of-type(1),
+.sp-title > .sp-mask:nth-of-type(3) { margin-right: 0.15em; }
+.sp-word {
+  display: inline-block;
+  transform-origin: 0 100%;
+  transform: translate3d(0, calc((1 - var(--e, 1)) * 180%), 0) rotate(calc((1 - var(--e, 1)) * 8deg));
+}
+.sp-q {
+  display: inline-block;
+  margin-left: 0.02em;
+  color: var(--sp-accent);
+  transform-origin: 42% 86%;
+  transform: rotate(calc((1 - var(--e, 1)) * -80deg)) scale(var(--e, 1));
+}
+
+/* ---------- copy: one stage at a time, big ---------- */
+.sp-copy { position: relative; min-height: 0; }
+.sp-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(18px, 3svh, 30px);
+}
+.sp-m { display: block; overflow: hidden; padding: 0.1em 0.06em 0.16em; margin: -0.1em -0.06em -0.16em; }
+.sp-in {
+  display: block;
+  transform-origin: 0 100%;
+  transform:
+    translate3d(0, calc((1 - var(--e, 1)) * (1 - clamp(0, var(--x, 0), 1)) * 180% - var(--x, 0) * 180%), 0)
+    rotate(calc((1 - var(--e, 1)) * 5deg - var(--x, 0) * 3deg));
+}
+.sp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  padding: 7px 20px 7px 7px;
+  border-radius: 99px;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 12px 28px -18px rgba(20, 30, 90, 0.45);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.sp-chip b {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sp-accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+}
+.sp-line {
+  max-width: 10.5ch;
+  font-size: clamp(42px, min(5.3vw, 8.6svh), 96px);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.052em;
+  text-wrap: balance;
+}
+.sp-final .sp-line { max-width: 11ch; }
+.sp-answer {
+  max-width: 29ch;
+  font-size: clamp(18px, min(1.45vw, 2.7svh), 24px);
+  line-height: 1.45;
+  letter-spacing: -0.012em;
+  color: var(--sp-muted);
+  text-wrap: pretty;
+}
+.sp-pills { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+.jny-start .sp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 62px;
+  padding: 7px 7px 7px 26px;
+  border-radius: 99px;
+  background: var(--sp-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 18px 34px -20px rgba(11, 18, 32, 0.8);
+  color: #fff;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  text-decoration: none;
+  transform-origin: 30% 50%;
+  transform: scale(max(0, var(--e, 1)));
+  scale: 1;
+  transition: scale 0.6s var(--sp-spring);
+}
+.sp-pill-ic {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--sp-accent);
+  transition: translate 0.6s var(--sp-spring), scale 0.6s var(--sp-spring);
+}
+.sp-pill-ic svg { width: 17px; height: 17px; fill: none; stroke: #fff; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.jny-start .sp-pill:hover { scale: 1.035; }
+.jny-start .sp-pill:hover .sp-pill-ic { translate: 3px 0; scale: 1.08; }
+.jny-start .sp-pill:active { scale: 0.97; }
+.jny-start .sp-pill:focus-visible { outline: 3px solid var(--sp-accent); outline-offset: 4px; }
+
+/* ---------- the sculpture ---------- */
+.sp-scene {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+.sp-stage3d {
+  position: relative;
+  width: min(100%, 64svh);
+  aspect-ratio: 1;
+  container-type: size;
+  perspective: 2200px;
+  perspective-origin: 50% 40%;
+}
+.sp-float,
+.sp-rig {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.sp-float { animation: sp-float 6.4s var(--sp-loop) infinite alternate; }
+.sp-tile,
+.sp-shade {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30cqw;
+  height: 30cqw;
+  margin: -15cqw 0 0 -15cqw;
+}
+.sp-tile {
+  border-radius: 50%;
+  background: radial-gradient(130% 130% at 26% 16%, #b4baff 0%, #6470ff 22%, #2f3ff0 46%, #1b25c4 74%, #10178a 100%);
+  box-shadow:
+    inset 0 0.4cqw 0.2cqw rgba(255, 255, 255, 0.5),
+    inset 0 -3cqw 5cqw rgba(6, 10, 80, 0.38);
+  color: #fff;
+  overflow: hidden;
+  backface-visibility: hidden;
+  transform: scale(0);
+}
+.sp-white { color: var(--sp-accent); }
+.sp-face {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(155deg, #ffffff 0%, #f1f3fa 60%, #e3e7f2 100%);
+  box-shadow: inset 0 0.4cqw 0 #fff, inset 0 -2.4cqw 4cqw rgba(20, 30, 100, 0.1);
+  clip-path: circle(calc(var(--w, 0) * 150%) at 22% 16%);
+}
+.sp-shade {
+  border-radius: 34%;
+  background: radial-gradient(closest-side, rgba(18, 26, 110, 0.26), rgba(18, 26, 110, 0));
+  transform: scale(0);
+}
+.sp-glyph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform: scale(max(0, var(--g, 0)));
+}
+.sp-glyph svg { width: 48%; height: 48%; overflow: visible; }
+.sp-spark-g { transform: scale(var(--g0, 0)) rotate(calc((1 - var(--g0, 0)) * 90deg)); }
+.sp-spark-g svg { width: 40%; height: 40%; fill: #fff; }
+.sp-arrow-g { transform: scale(max(0, var(--g1, 0))) rotate(calc((1 - var(--g1, 0)) * -120deg)); }
+.sp-arrow-g svg { width: 44%; height: 44%; }
+
+.sp-ground {
+  position: absolute;
+  top: 86%;
+  left: 50%;
+  width: 62cqw;
+  height: 9cqw;
+  margin: -4.5cqw 0 0 -31cqw;
+  transform: scale(max(0, var(--gr, 0)));
+}
+.sp-ground i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(18, 26, 110, 0.3), rgba(18, 26, 110, 0));
+  animation: sp-ground 6.4s var(--sp-loop) infinite alternate;
+}
+.sp-moons { position: absolute; inset: 0; transform: scale(max(0, var(--mo, 0))); }
+.sp-orbit { position: absolute; inset: 0; animation: sp-orbit 18s var(--sp-loop) infinite; }
+.sp-orbit i {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(120% 120% at 28% 20%, #c3c8ff 0%, #5b67ff 35%, #1d27c8 100%);
+  box-shadow: inset 0 -1cqw 2cqw rgba(6, 10, 80, 0.35), 0 2cqw 4cqw -1.5cqw rgba(24, 32, 170, 0.6);
+}
+.sp-orbit i:nth-child(1) { top: 9cqw; left: 12cqw; width: 9cqw; height: 9cqw; }
+.sp-orbit i:nth-child(2) {
+  right: 9cqw;
+  bottom: 14cqw;
+  width: 6cqw;
+  height: 6cqw;
+  background: radial-gradient(120% 120% at 28% 20%, #ffffff 0%, #eef0f8 55%, #cfd5e6 100%);
+  box-shadow: inset 0 -0.8cqw 1.4cqw rgba(20, 30, 100, 0.18), 0 2cqw 4cqw -1.5cqw rgba(20, 30, 100, 0.4);
+}
+
+/* ---------- stage dots: a pip that stretches as it travels ---------- */
+.sp-dots {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: flex;
+  translate: -50% 0;
+  transform: scale(max(0, var(--e, 1)));
+}
+.sp-dots button {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.sp-dots button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: #c7cedb;
+  transition: scale 0.5s var(--sp-spring);
+}
+.sp-dots button:hover::after { scale: 1.45; }
+.sp-dots button:focus-visible { outline: 2px solid var(--sp-accent); outline-offset: -4px; border-radius: 50%; }
+.sp-pip {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  border-radius: 99px;
+  background: var(--sp-accent);
+  box-shadow: 0 0 0 5px rgba(36, 51, 230, 0.14);
+  pointer-events: none;
+}
+
+/* ---------- ambient loops (only while on screen) ---------- */
+.sp-loop { transform-box: fill-box; }
+.sp-bar { transform-origin: 50% 100%; animation: sp-bar 3.6s var(--sp-loop) infinite; }
+.sp-bar:nth-child(2) { animation-delay: -1.2s; }
+.sp-bar:nth-child(3) { animation-delay: -2.4s; }
+.sp-knob { animation: sp-knob 4.2s var(--sp-spring) infinite; }
+.sp-ping { transform-origin: 50% 50%; animation: sp-ping 2.8s var(--sp-loop) infinite; }
+.sp-head { transform-origin: 50% 50%; stroke: #fff; stroke-width: 3; paint-order: stroke; animation: sp-head 3.4s var(--sp-loop) infinite; }
+.sp-head:nth-child(2) { animation-delay: -0.4s; }
+.sp-head:nth-child(3) { animation-delay: -0.8s; }
+.sp-tick { stroke-dasharray: 1; animation: sp-tick 4s var(--sp-loop) infinite; }
+.sp-wave { animation: sp-wave 3.2s var(--sp-loop) infinite; }
+.sp-arc { stroke-dasharray: 1; animation: sp-arc 5s var(--sp-loop) infinite; }
+.sp-quad { transform-origin: 50% 50%; animation: sp-quad 4.8s var(--sp-spring) infinite; }
+.sp-spark { transform-origin: 50% 50%; animation: sp-spark 3.4s var(--sp-loop) infinite; }
+.jny-start:not([data-awake]) :is(.sp-float, .sp-ground i, .sp-orbit, .sp-loop) { animation-play-state: paused; }
+
+@keyframes sp-float { from { transform: translate3d(0, -1.6cqw, 0); } to { transform: translate3d(0, 1.6cqw, 0); } }
+@keyframes sp-ground { from { transform: scale(0.84); } to { transform: scale(1.04); } }
+@keyframes sp-orbit { to { transform: rotate(360deg); } }
+@keyframes sp-bar { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.45); } }
+@keyframes sp-knob { 0%, 40% { transform: translateX(0); } 50%, 90% { transform: translateX(18px); } }
+@keyframes sp-ping { 0%, 100% { transform: scale(0.72); } 50% { transform: scale(1.12); } }
+@keyframes sp-head { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes sp-tick { 0%, 15% { stroke-dashoffset: 1; } 45%, 85% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -1; } }
+@keyframes sp-wave { to { transform: translateX(24px); } }
+@keyframes sp-arc { 0% { stroke-dashoffset: 0.92; } 55%, 70% { stroke-dashoffset: 0.25; } 100% { stroke-dashoffset: 0.92; } }
+@keyframes sp-quad { 0%, 35% { transform: rotate(0); } 50%, 85% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
+@keyframes sp-spark { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(0.82) rotate(45deg); } }
+
+/* ---------- short desktop screens ---------- */
+@media (min-width: 901px) and (max-height: 760px) {
+  .sp-chip { font-size: 15px; padding-block: 5px; }
+  .sp-chip b { width: 28px; height: 28px; }
+  .jny-start .sp-pill { min-height: 54px; font-size: 17px; }
+  .sp-pill-ic { width: 40px; height: 40px; }
+}
+
+/* ---------- phones and narrow tablets: sculpture above, copy below ---------- */
+@media (max-width: 900px) {
+  .jny-project-showcase.jny-start { --tf: clamp(52px, 15vw, 104px); --k: 0.52; padding: 76px 20px 18px; }
+  .sp-frame {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 0.9fr) minmax(0, 1fr);
+    padding-top: calc(var(--tf) * 1.84 * var(--k) + 8px);
+  }
+  .sp-scene { grid-row: 1; }
+  .sp-copy { grid-row: 2; }
+  .sp-stage3d { width: min(100%, 36svh); }
+  .sp-dots { bottom: -6px; }
+  .sp-slide { justify-content: flex-start; gap: 14px; padding-top: 14px; }
+  .sp-chip { font-size: 15px; padding: 5px 16px 5px 5px; }
+  .sp-chip b { width: 28px; height: 28px; font-size: 13px; }
+  .sp-line { max-width: 13ch; font-size: clamp(34px, 9.6vw, 56px); }
+  .sp-answer { font-size: clamp(16px, 4.3vw, 19px); }
+  .sp-pills { gap: 8px; }
+  .jny-start .sp-pill { min-height: 52px; gap: 12px; padding-left: 20px; font-size: 17px; }
+  .sp-pill-ic { width: 40px; height: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-float, .sp-ground i, .sp-orbit, .sp-loop { animation: none !important; }
+  .jny-start .sp-pill, .sp-pill-ic, .sp-dots button::after { transition: none !important; }
+}
+.jny-static .jny-project-showcase.jny-start { position: relative; visibility: visible; clip-path: none; min-height: 100vh; }

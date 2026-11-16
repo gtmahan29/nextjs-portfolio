@@ -1,0 +1,18 @@
+.aaq-study-dialog .aaq-scroll-film{--film-height:min(72svh,740px);height:calc(var(--film-height) + 85svh);position:relative;margin:48px 0 56px!important;isolation:isolate;perspective:1600px}
+.aaq-study-dialog .aaq-film-sticky{position:sticky;top:100px;height:var(--film-height);display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% 58%,#39382250,transparent 68%),#171a12;border:1px solid #e6dfcb1f;border-radius:16px;overflow:hidden}
+.aaq-study-dialog .aaq-film-topline{display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid var(--aaq-line);padding:18px 24px;font-size:11px;letter-spacing:.025em;color:#acaf9f}
+.aaq-study-dialog .aaq-film-topline>span:last-child{font-family:ui-monospace,monospace;color:#dcae3d;font-size:10px;font-variant-numeric:tabular-nums}
+.aaq-study-dialog .aaq-film-viewport{flex:1;min-height:0;min-width:0;transform-origin:center center;pointer-events:none}
+.aaq-study-dialog .aaq-film-caption-row{display:flex;align-items:center;justify-content:space-between;gap:32px;padding:20px 24px;border-top:1px solid var(--aaq-line);font-size:12px;line-height:1.6;min-height:88px;color:#c8c8b5}
+.aaq-study-dialog .aaq-film-caption{max-width:40ch}
+.aaq-study-dialog .aaq-film-scroll-hint{display:flex;align-items:center;gap:14px;font-size:10px;line-height:1.6;max-width:100px;color:#999e88}
+.aaq-study-dialog .aaq-film-scroll-hint>span{color:#dcae3d;font-size:18px}
+.aaq-study-dialog .aaq-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.aaq-study-dialog .aaq-editor-note,.aaq-study-dialog .aaq-mini-editorial{position:relative;--aaq-rule:1}
+.aaq-study-dialog .aaq-editor-note:after,.aaq-study-dialog .aaq-mini-editorial:after{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:#dcae3d65;transform:scaleX(var(--aaq-rule));transform-origin:left}
+.aaq-study-dialog .aaq-case button:active{transform:translateY(1px)}
+.aaq-study-dialog .aaq-scroll-film.is-static{height:auto}
+.aaq-study-dialog .aaq-scroll-film.is-static .aaq-film-sticky{position:relative;top:auto}
+@media(max-width:800px){.aaq-study-dialog .aaq-scroll-film{--film-height:min(72svh,690px)}.aaq-study-dialog .aaq-film-sticky{top:80px}}
+@media(max-width:600px){.aaq-study-dialog .aaq-scroll-film{--film-height:min(72svh,610px);margin:32px 0 40px!important;height:calc(var(--film-height) + 75svh)}.aaq-study-dialog .aaq-film-sticky{border-radius:10px}.aaq-study-dialog .aaq-film-topline{padding:14px 16px;font-size:10px}.aaq-study-dialog .aaq-film-caption-row{padding:16px;gap:16px;font-size:11px;min-height:104px}.aaq-study-dialog .aaq-film-scroll-hint{font-size:9px;max-width:70px}.aaq-study-dialog .aaq-scroll-film.is-static{height:auto}}
+@media(prefers-reduced-motion:reduce){.aaq-study-dialog .aaq-scroll-film{height:auto}.aaq-study-dialog .aaq-film-sticky{position:relative;top:auto}.aaq-study-dialog .aaq-film-scroll-hint{display:none}.aaq-study-dialog .aaq-case button:active{transform:none}}

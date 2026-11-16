@@ -1,0 +1,230 @@
+/* =====================================================================
+   Services hall: the mockup stands centre stage in a dark room, in front
+   of one giant word that names the service. Around it, only three things:
+   a rolling counter (top-left), the promise (bottom-left) and one CTA
+   (bottom-right).
+   Scroll decides which service is on stage; the runtime then springs each
+   element in real time on the shared curve (motion-curve.ts), so every
+   move overshoots and is caught. Copy slides out of masks, the giant word
+   and the CTA pop from a point. Nothing fades.
+   ===================================================================== */
+.st-hall[data-single-laptop] {
+  --svc-room: #0a0f1d;
+  --svc-ink: #f4f6fb;
+  --svc-muted: #9aa3b9;
+  --svc-glow: #9fb0ff;
+  --svc-accent: #2433e6;
+  --svc-spring: var(--ease-spring, cubic-bezier(0.34, 1.4, 0.64, 1));
+  --svc-edge: max(clamp(22px, 4.5vw, 88px), calc((100% - 1440px) / 2));
+  --svc-top: clamp(96px, 12svh, 128px);
+  --svc-bottom: clamp(28px, 6svh, 64px);
+  font-family: var(--font-services), ui-sans-serif, system-ui, sans-serif;
+}
+.st-hall.lumen-hall[data-single-laptop],
+.st-hall[data-single-laptop] .lumen-stage {
+  background:
+    radial-gradient(60% 55% at 50% 58%, #18214a 0%, rgba(24, 33, 74, 0) 70%),
+    var(--svc-room);
+  color: var(--svc-ink);
+}
+.st-hall[data-single-laptop] .lumen-stage > canvas { z-index: 1; }
+
+/* ---------- masks ---------- */
+.svc-m {
+  display: block;
+  overflow: hidden;
+  padding: 0.1em 0.06em 0.16em;
+  margin: -0.1em -0.06em -0.16em;
+}
+.svc-in {
+  display: block;
+  transform-origin: 0 100%;
+  transform:
+    translate3d(0, calc((1 - var(--e, 1)) * (1 - clamp(0, var(--x, 0), 1)) * 180% - var(--x, 0) * 180%), 0)
+    rotate(calc((1 - var(--e, 1)) * 5deg - var(--x, 0) * 3deg));
+}
+
+/* ---------- the giant word behind the mockup ---------- */
+.svc-giant {
+  position: absolute;
+  top: 46%;
+  right: 0;
+  left: 0;
+  z-index: 0;
+  overflow: hidden;
+  padding: 0.04em 0 0.1em;
+  font-size: clamp(110px, min(18vw, 34svh), 340px);
+  font-weight: 600;
+  line-height: 0.82;
+  letter-spacing: -0.065em;
+  pointer-events: none;
+  transform-origin: 50% 60%;
+  transform: translate3d(0, -50%, 0) scale(max(0, var(--e, 1)));
+}
+/* A wide gap keeps the next word fully off stage until it is called. */
+.svc-giant-track {
+  display: flex;
+  column-gap: 50vw;
+  transform: translate3d(calc(var(--pos, 0) * (-100% - 50vw)), 0, 0);
+}
+.svc-giant-word {
+  display: flex;
+  flex: 0 0 100%;
+  justify-content: center;
+  white-space: nowrap;
+}
+/* Letters fan out in the direction of travel and gather again as the word lands. */
+.svc-letter {
+  display: inline-block;
+  color: #252f63;
+  transform: translate3d(calc((var(--k) - var(--pos, 0)) * var(--l) * 0.16em), 0, 0);
+}
+
+/* ---------- top-left: rolling counter ---------- */
+.svc-count {
+  position: absolute;
+  top: var(--svc-top);
+  left: var(--svc-edge);
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  pointer-events: none;
+  transform-origin: 0 0;
+  transform: scale(max(0, var(--e, 1)));
+}
+.svc-count-num {
+  display: inline-flex;
+  font-size: clamp(64px, min(6.4vw, 10svh), 112px);
+  font-weight: 500;
+  line-height: 0.86;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+  color: var(--svc-ink);
+}
+.svc-roll { display: inline-block; height: 0.9em; overflow: hidden; }
+.svc-roll-col {
+  display: flex;
+  flex-direction: column;
+  transform: translate3d(0, calc(var(--pos, 0) * -0.9em), 0);
+}
+.svc-roll-col > span { height: 0.9em; }
+.svc-count-of {
+  padding-top: 0.25em;
+  font-size: clamp(20px, 1.7vw, 28px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--svc-muted);
+}
+
+/* ---------- bottom: the promise left, one CTA right ---------- */
+.svc-panel {
+  position: absolute;
+  right: var(--svc-edge);
+  bottom: var(--svc-bottom);
+  left: var(--svc-edge);
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  visibility: hidden;
+  pointer-events: none;
+}
+.svc-panel[data-current="true"] { visibility: visible; }
+.svc-story { display: flex; flex-direction: column; gap: clamp(12px, 2svh, 20px); max-width: min(38%, 540px); }
+.st-hall .svc-story h3,
+.st-hall .svc-story p { margin: -0.1em -0.06em -0.16em; }
+.svc-head {
+  font-size: clamp(34px, min(3.6vw, 6svh), 62px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.048em;
+  color: var(--svc-ink);
+  text-wrap: balance;
+}
+.svc-text {
+  max-width: 34ch;
+  font-size: clamp(17px, min(1.3vw, 2.4svh), 21px);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--svc-muted);
+  text-wrap: pretty;
+}
+
+.st-hall .svc-go {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 18px;
+  min-height: 64px;
+  padding: 8px 8px 8px 28px;
+  border-radius: 99px;
+  background: #fff;
+  box-shadow: inset 0 -2px 6px rgba(20, 30, 90, 0.1), 0 24px 46px -22px rgba(159, 176, 255, 0.6);
+  color: var(--svc-room);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  text-decoration: none;
+  pointer-events: auto;
+  transform-origin: 100% 50%;
+  transform: scale(max(0, calc(var(--e, 1) - var(--x, 0))));
+  scale: 1;
+  transition: scale 0.6s var(--svc-spring);
+}
+.svc-go-ic {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--svc-accent);
+  transition: translate 0.6s var(--svc-spring), scale 0.6s var(--svc-spring);
+}
+.svc-go-ic svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: rotate 0.7s var(--svc-spring);
+}
+.st-hall .svc-go:hover { scale: 1.035; }
+.st-hall .svc-go:hover .svc-go-ic { translate: 3px 0; scale: 1.06; }
+.st-hall .svc-go:hover .svc-go-ic svg { rotate: 45deg; }
+.st-hall .svc-go:active { scale: 0.97; }
+.st-hall .svc-go:focus-visible { outline: 3px solid var(--svc-glow); outline-offset: 4px; }
+
+.lumen-transferring :is(.svc-giant, .svc-count, .svc-panel) { visibility: hidden !important; }
+
+/* ---------- tablets ---------- */
+@media (max-width: 1100px) and (min-width: 701px) {
+  .svc-story { max-width: 52%; }
+}
+
+/* ---------- phones: counter on top, giant word and mockup in the middle, copy and CTA below ---------- */
+@media (max-width: 700px) {
+  .st-hall[data-single-laptop] { --svc-top: 78px; --svc-edge: 20px; --svc-bottom: 22px; }
+  .svc-count-num { font-size: clamp(48px, 13vw, 60px); }
+  .svc-count-of { font-size: 16px; }
+  .svc-giant { top: 46%; font-size: clamp(84px, 25vw, 130px); }
+  .svc-panel { flex-direction: column; align-items: stretch; gap: 18px; }
+  .svc-story { max-width: none; }
+  .svc-head { font-size: clamp(27px, 7.6vw, 34px); }
+  .svc-text { font-size: 15px; }
+  .st-hall .svc-go { align-self: flex-start; min-height: 54px; padding-left: 22px; font-size: 16px; transform-origin: 0 50%; }
+  .svc-go-ic { width: 40px; height: 40px; }
+}
+
+/* ---------- reduced motion and the static fallback: one readable list ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .svc-panel { position: relative; inset: auto; flex-direction: column; align-items: flex-start; margin: 0 0 48px; visibility: visible; }
+  .svc-giant, .svc-count { display: none; }
+  .svc-in, .st-hall .svc-go { transform: none !important; }
+}
+.st-hall[data-single-laptop].jny-static .svc-panel { position: relative; inset: auto; flex-direction: column; align-items: flex-start; margin: 0 0 48px; visibility: visible; }
+.st-hall[data-single-laptop].jny-static :is(.svc-giant, .svc-count) { display: none; }
+.st-hall[data-single-laptop].jny-static :is(.svc-in, .svc-go) { transform: none; }

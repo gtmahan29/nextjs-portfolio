@@ -13,5 +13,8 @@
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils"
+  },
+  "registries": {
+    "@isometric": "https://isometric.buildlab.in/r/{name}.json"
   }
 }

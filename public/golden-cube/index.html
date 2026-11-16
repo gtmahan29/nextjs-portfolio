@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Golden Cube · Six independent faces</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#080a0f;color:#eee8da;font-family:system-ui,sans-serif;overflow:hidden}canvas{display:block;width:100%;height:100vh}header{position:absolute;top:30px;left:32px;pointer-events:none}header small{font-size:11px;letter-spacing:.22em;color:#c7a867;text-transform:uppercase}h1{font-size:27px;font-weight:500;margin:10px 0}header p{font-size:13px;color:#94999f;margin:0}.controls{position:absolute;right:24px;top:24px;width:240px;padding:20px;background:#13161dde;border:1px solid #ffffff17;border-radius:16px;backdrop-filter:blur(15px)}.controls h2{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;color:#b8b7b1;margin:0 0 20px}.row{margin:13px 0}.row label{font-size:13px;display:flex;justify-content:space-between;text-transform:capitalize}.row output{color:#c7a867;font-variant-numeric:tabular-nums}input{width:100%;accent-color:#e8b64c;margin:9px 0 0}.buttons{display:flex;gap:8px;margin-top:19px}button{flex:1;background:#e4bc6d;color:#211d17;border:0;border-radius:7px;padding:10px;cursor:pointer}button.secondary{background:#30343c;color:#ebe8e0}.footer{position:absolute;bottom:25px;left:32px;font-size:12px;color:#94999f}.footer a{color:#dabc7d;text-decoration:none}.footer span{display:block;margin-top:10px;font-size:11px}#status{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#dabc7d}#reference{margin-top:14px;width:100%;background:#202630;color:#ccc}.hint{font-size:11px;line-height:1.6;color:#91969e;margin-top:14px}@media(max-width:700px){header{left:16px;top:18px}h1{font-size:20px}.controls{top:auto;bottom:15px;right:15px;width:210px;padding:14px}.row{margin:6px 0}.footer{left:16px;bottom:auto;top:105px}header p{max-width:180px}.hint{display:none}}
+  </style>
+  <style>
+    canvas{position:absolute;left:0;top:0;width:calc(100% - 280px)}
+    @media(max-width:700px){
+      canvas{top:115px;width:100%;height:calc(100vh - 385px)}
+      .controls{width:calc(100% - 30px);bottom:15px;left:15px;right:15px;padding:15px}
+      .controls h2{margin-bottom:8px}#sliders{display:grid;grid-template-columns:repeat(3,1fr);gap:7px 18px}
+      .row{margin:5px 0}.buttons{margin-top:10px}.footer{top:91px;bottom:auto}.footer span{display:none}
+      #reference{margin-top:9px;padding:8px}.controls input{margin:7px 0 0}header p{max-width:none}.footer{top:100px}
+    }
+  </style>
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+</head>
+<body>
+<header><small>Meshy × Blender × Three.js</small><h1>The Golden Cube</h1><p>Six faces. Each one yours to open.</p></header>
+<div id="status">Loading the cube…</div>
+<aside class="controls"><h2>Panel controls</h2><div id="sliders"></div><div class="buttons"><button id="open">Open all</button><button class="secondary" id="close">Close all</button></div><button id="reference">View Meshy reference</button><p class="hint">Drag to orbit · Scroll to zoom<br>Click a face to open or close it.</p></aside>
+<div class="footer"><a href="./golden-cube.glb" download>Download GLB</a> &nbsp; / &nbsp; <a href="./golden-cube.blend" download>Blender source</a><span>Reflective gold panels · Etched light circuits · Inlaid crystals</span></div>
+<script type="module" src="./preview.js"></script>
+</body></html>

@@ -1,0 +1,487 @@
+/* =====================================================================
+   The closing chapters: what you build, what you ask, the first message.
+
+   The sky of "Work directly with me" carries on: cool paper-blue air,
+   navy ink, white glass. At the contact form the day turns to night and
+   runs on into the footer. No brass, no cream, very little text.
+
+   Motion lives in closing-chapters.tsx, contact-form.tsx and
+   spring-ticker.ts; CSS only turns their values into shape. Nothing fades.
+   ===================================================================== */
+
+.jny-chapters {
+  --k-ink: #132034;
+  --k-muted: #56667c;
+  --k-dim: #8d9bb0;
+  --k-line: rgba(19, 32, 52, 0.1);
+  --k-night: #0b1422;
+  --k-gx: clamp(22px, 6vw, 112px);
+  --k-spring: var(--ease-spring, cubic-bezier(0.34, 1.4, 0.64, 1));
+  background: var(--k-night);
+}
+
+.jny-root .jny-chapters .jny-closing:not(.jw) {
+  padding: clamp(96px, 11vw, 160px) var(--k-gx);
+  color: var(--k-ink);
+  scroll-margin-top: 0;
+}
+.jc-wrap { width: min(100%, 1400px); margin-inline: auto; }
+
+.jny-root .jny-chapters .jc-h2 {
+  margin: 0;
+  font-size: clamp(48px, 5.6vw, 108px);
+  font-weight: 500;
+  line-height: 0.94;
+  letter-spacing: -0.062em;
+  color: var(--k-ink);
+}
+.jny-root .jny-chapters .jc-h2 .jc-dim { color: var(--k-dim); }
+.jny-chapters .jm-m { padding-bottom: 0.2em; margin-bottom: -0.2em; }
+/* Anything that pops instead of rising: one scale, overshoot included. */
+.jc-pop { display: block; transform-origin: 50% 50%; transform: scale(max(0, calc(var(--e, 0) - var(--x, 0)))); }
+.jny-chapters :focus-visible { outline: 2px solid var(--k-ink); outline-offset: 4px; border-radius: 14px; }
+
+/* the travelling capsule (spring-ticker.ts) */
+.jp-capsule, .jny-pick-capsule {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  border-radius: 999px;
+  transform: scale(0);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* =====================================================================
+   What are you building? One sculpted object, three forms.
+   Four slabs in real CSS 3D: a twisting tower (a product build), one
+   navy block (a focused launch), or an orbit (an ongoing partner).
+   ===================================================================== */
+.jny-root .jny-chapters .jc-pricing { background: linear-gradient(180deg, #d2deea 0%, #e3ebf3 40%, #edf2f7 100%); }
+.jp-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 96px);
+  min-height: clamp(560px, 80svh, 860px);
+}
+.jp-side { display: grid; align-content: center; }
+
+.jp-options { position: relative; display: grid; gap: 2px; width: min(100%, 460px); margin-top: clamp(36px, 5svh, 60px); }
+.jp-capsule { background: var(--k-ink); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 36px -20px rgba(19, 32, 52, 0.75); }
+.jp-pop { position: relative; z-index: 1; transform-origin: 0 50%; }
+.jny-root .jp-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+  padding: clamp(15px, 1.6vw, 20px) clamp(20px, 2vw, 26px);
+  border-radius: 999px;
+  background: none;
+  color: var(--k-muted);
+  font: inherit;
+  font-size: clamp(20px, 1.9vw, 28px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  text-align: start;
+  cursor: pointer;
+  transition: color 0.55s var(--k-spring), scale 0.4s var(--k-spring);
+}
+.jp-option-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; transform: scale(0); transition: transform 0.7s var(--k-spring); }
+.jny-root .jp-option[aria-pressed="true"] { color: #f3f6fb; }
+.jp-option[aria-pressed="true"] .jp-option-dot { transform: scale(1); }
+@media (hover: hover) and (pointer: fine) { .jny-root .jp-option:not([aria-pressed="true"]):hover { color: var(--k-ink); } }
+.jny-root .jp-option:active { scale: 0.98; }
+
+.jp-lines { display: grid; margin-top: clamp(28px, 4svh, 44px); }
+.jp-line { grid-area: 1 / 1; }
+.jp-line[aria-hidden="true"] { pointer-events: none; }
+.jny-root .jp-line p { max-width: 32ch; margin: 0; color: var(--k-muted); font-size: 17px; line-height: 1.5; }
+.jp-go { width: max-content; margin-top: 24px; transform-origin: 0 50%; }
+.jny-root .jny-chapters .jny-arrow-link { background: var(--k-ink); color: #f3f6fb; padding: 7px 7px 7px 26px; font-size: 15.5px; }
+.jny-root .jny-chapters .jny-arrow-link .ic { width: 42px; height: 42px; background: #f3f6fb; color: var(--k-ink); }
+
+/* the object */
+.jp-scene {
+  position: relative;
+  height: clamp(420px, 66svh, 680px);
+  perspective: 1600px;
+  perspective-origin: 50% 30%;
+}
+.jp-floor {
+  position: absolute;
+  left: 50%;
+  top: 74%;
+  width: 72%;
+  height: 18%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(19, 36, 60, 0.24), rgba(19, 36, 60, 0));
+  transform: scale(0.62, 0.8);
+  transition: transform 1.1s var(--k-spring);
+}
+.jp-scene:has(.jp-world[data-scope="launch"]) .jp-floor { transform: scale(0.5, 0.66); }
+.jp-scene:has(.jp-world[data-scope="partner"]) .jp-floor { transform: scale(1, 1); }
+.jp-world {
+  --sw: clamp(170px, 17vw, 270px);
+  --sh: calc(var(--sw) * 0.13);
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform-style: preserve-3d;
+  transform: rotateX(-24deg) rotateY(-38deg);
+}
+/* The orbit an ongoing partnership runs on: a flat ring that springs open under the slabs. */
+.jp-orbit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--sw) * 1.68);
+  height: calc(var(--sw) * 1.68);
+  margin: calc(var(--sw) * -0.84) 0 0 calc(var(--sw) * -0.84);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px rgba(19, 32, 52, 0.16), 0 0 0 calc(var(--sw) * 0.05) rgba(255, 255, 255, 0.35);
+  transform: rotateX(90deg) scale(0);
+  transition: transform 1.1s var(--k-spring);
+}
+.jp-world[data-scope="partner"] .jp-orbit { transform: rotateX(90deg) scale(1); }
+.jp-slab {
+  --top: linear-gradient(135deg, #ffffff 0%, #eef3f8 60%, #e2e9f1 100%);
+  --front: linear-gradient(180deg, #e8eef5, #d3dde8);
+  --side: linear-gradient(180deg, #d9e2ec, #c2cedb);
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  transform: scale3d(0, 0, 0);
+  visibility: hidden;
+}
+.jp-slab[data-i="1"] {
+  --top: linear-gradient(135deg, #e9eff6 0%, #d4dee9 100%);
+  --front: linear-gradient(180deg, #c9d5e2, #b4c2d2);
+  --side: linear-gradient(180deg, #b9c6d5, #a3b2c4);
+}
+.jp-slab[data-i="2"] {
+  --top: linear-gradient(135deg, #b7c4d4 0%, #95a5ba 100%);
+  --front: linear-gradient(180deg, #8797ad, #72839b);
+  --side: linear-gradient(180deg, #76879e, #63738a);
+}
+.jp-slab[data-i="3"] {
+  --top: radial-gradient(90% 90% at 28% 22%, #3a4d6c 0%, #1d2d47 55%, #132034 100%);
+  --front: linear-gradient(180deg, #16243a, #0e1828);
+  --side: linear-gradient(180deg, #0f1b2d, #0a1320);
+}
+.jp-f { position: absolute; left: 0; top: 0; display: block; backface-visibility: hidden; }
+.jp-top {
+  width: var(--sw);
+  height: var(--sw);
+  margin: calc(var(--sw) / -2) 0 0 calc(var(--sw) / -2);
+  border-radius: 4px;
+  background: var(--top);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55), inset 0 0 calc(var(--sw) * 0.18) rgba(255, 255, 255, 0.25);
+  transform: rotateX(90deg) translateZ(calc(var(--sh) / 2));
+}
+.jp-slab[data-i="3"] .jp-top { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 0 calc(var(--sw) * 0.2) rgba(120, 150, 200, 0.12); }
+.jp-front, .jp-back, .jp-right, .jp-left {
+  width: var(--sw);
+  height: var(--sh);
+  margin: calc(var(--sh) / -2) 0 0 calc(var(--sw) / -2);
+  background: var(--front);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.jp-right, .jp-left { background: var(--side); }
+.jp-front { transform: translateZ(calc(var(--sw) / 2)); }
+.jp-back { transform: rotateY(180deg) translateZ(calc(var(--sw) / 2)); }
+.jp-right { transform: rotateY(90deg) translateZ(calc(var(--sw) / 2)); }
+.jp-left { transform: rotateY(-90deg) translateZ(calc(var(--sw) / 2)); }
+.jp-slab[data-i="3"] :is(.jp-front, .jp-back, .jp-right, .jp-left) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14); }
+
+/* =====================================================================
+   Before we start. A conversation.
+   ===================================================================== */
+.jny-root .jny-chapters .jc-faq { background: linear-gradient(180deg, #edf2f7 0%, #eef3f8 100%); }
+.jq-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: clamp(36px, 6vw, 110px);
+  min-height: clamp(560px, 76svh, 820px);
+}
+.jq-asks { display: flex; flex-wrap: wrap; gap: 9px; max-width: 580px; margin-top: clamp(32px, 4.4vw, 56px); }
+.jq-asks .jc-pop { transform-origin: 0 50%; }
+.jny-root .jq-ask {
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(19, 32, 52, 0.08);
+  color: var(--k-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 0.5s var(--k-spring), color 0.5s var(--k-spring), box-shadow 0.5s var(--k-spring), scale 0.5s var(--k-spring);
+}
+.jny-root .jq-ask[data-asked="true"] { background: rgba(255, 255, 255, 0.3); color: var(--k-muted); }
+.jny-root .jq-ask[aria-pressed="true"] { background: var(--k-ink); color: #f3f6fb; box-shadow: 0 12px 26px -14px rgba(19, 32, 52, 0.7); }
+@media (hover: hover) and (pointer: fine) { .jny-root .jq-ask:not([aria-pressed="true"]):hover { background: #fff; color: var(--k-ink); } }
+.jny-root .jq-ask:active { scale: 0.96; }
+
+.jq-thread { display: grid; gap: 16px; align-content: center; min-height: 440px; }
+.jq-row { display: flex; align-items: flex-end; gap: 12px; }
+.jq-row-you { justify-content: flex-end; }
+.jq-face {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.jq-face-you { background: radial-gradient(120% 120% at 30% 20%, #fff 0%, #eef3f8 70%); box-shadow: inset 0 0 0 1px rgba(19, 32, 52, 0.08), 0 10px 22px -12px rgba(19, 36, 60, 0.5); color: var(--k-ink); }
+.jq-face-mahan { background: var(--k-ink); color: #f3f6fb; font-size: 15px; box-shadow: 0 10px 22px -12px rgba(19, 32, 52, 0.7); }
+.jq-you { display: flex; justify-content: flex-end; min-width: 0; }
+.jq-you-body {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px 24px 6px 24px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(19, 32, 52, 0.06), 0 22px 40px -26px rgba(19, 36, 60, 0.5);
+  transform-origin: 100% 100%;
+  transform: scale(0);
+}
+.jny-root .jq-you-page {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: max-content;
+  max-width: min(380px, 62vw);
+  margin: 0;
+  padding: 15px 20px 16px;
+  color: var(--k-ink);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+}
+.jq-reply { flex: 1 1 0; min-width: 0; max-width: 560px; }
+.jq-reply-body {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px 24px 24px 6px;
+  background: var(--k-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 30px 50px -28px rgba(19, 32, 52, 0.75);
+  transform-origin: 0 100%;
+  transform: scale(0);
+}
+.jny-root .jq-reply-page { position: absolute; left: 0; top: 0; margin: 0; padding: 20px 24px 22px; color: #e6ecf4; font-size: 16.5px; line-height: 1.6; }
+.jq-dots { position: absolute; left: 20px; top: 50%; display: flex; gap: 6px; translate: 0 -50%; transform: scale(max(0, var(--t, 0))); transform-origin: 0 50%; }
+.jq-dots i { width: 7px; height: 7px; border-radius: 50%; background: #8d9bb0; animation: jq-dot 1.1s var(--k-spring) infinite; }
+.jq-dots i:nth-child(2) { animation-delay: 0.14s; }
+.jq-dots i:nth-child(3) { animation-delay: 0.28s; }
+@keyframes jq-dot { 0%, 60%, 100% { transform: translate3d(0, 0, 0); } 30% { transform: translate3d(0, -5px, 0); } }
+
+/* =====================================================================
+   Contact: the sky turns to night, and you write the first message,
+   one question at a time. The dot on the line is the progress.
+   ===================================================================== */
+.jny-root .jny-chapters .jc-contact {
+  padding-top: clamp(240px, 36svh, 400px);
+  background: linear-gradient(180deg, #eef3f8 0, #bccbdc clamp(40px, 6svh, 70px), #4b5d7c clamp(120px, 18svh, 200px), #17243b clamp(200px, 29svh, 320px), var(--k-night) clamp(260px, 38svh, 420px));
+  color: #eef2f8;
+}
+.jk-layout { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); align-items: center; gap: clamp(32px, 6vw, 110px); min-height: clamp(520px, 72svh, 760px); }
+.jny-root .jny-chapters .jc-contact .jc-h2 { color: #f1f4f9; }
+.jny-root .jny-chapters .jc-contact .jc-h2 .jc-dim { color: #7f92ad; }
+.jk-mail { width: max-content; max-width: 100%; margin-top: 30px; transform-origin: 0 50%; }
+.jny-root .jk-mail a { display: inline-flex; align-items: center; gap: 10px; padding-bottom: 5px; border-bottom: 1px solid rgba(241, 244, 249, 0.28); color: #c9d4e3; font-size: 16px; overflow-wrap: anywhere; transition: gap 0.5s var(--k-spring), border-color 0.4s var(--k-spring), color 0.4s var(--k-spring); }
+.jny-root .jk-mail a:hover { gap: 14px; border-color: #f1f4f9; color: #f1f4f9; }
+.jc-contact :focus-visible { outline-color: #f1f4f9; }
+
+/* The composer arrives out of its own clip. */
+.jc-contact .jk-form[data-beat] {
+  transform: translate3d(0, calc((1 - var(--e, 1)) * 48px), 0);
+  clip-path: inset(-40px -40px calc((1 - var(--e, 1)) * 100% - 40px) -40px);
+}
+
+/* a machined tray holding a sheet of night glass */
+.jk-shell {
+  padding: 7px;
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.jk-core {
+  padding: clamp(24px, 3.2vw, 46px);
+  border-radius: 33px;
+  background: linear-gradient(180deg, #13203a 0%, #0d1729 100%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 70px 110px -60px rgba(0, 0, 0, 0.85);
+}
+
+/* the line, and the dot that is the progress */
+.jk-wire { display: flex; align-items: center; }
+.jk-face {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  color: #e6ecf4;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.jk-face-mahan { background: #f1f4f9; color: var(--k-ink); font-size: 15px; box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.7); }
+.jk-track { position: relative; flex: 1; height: 2px; margin-inline: 14px; border-radius: 2px; background: rgba(241, 244, 249, 0.12); }
+.jk-fill { position: absolute; inset: 0; border-radius: inherit; background: rgba(241, 244, 249, 0.5); transform-origin: 0 50%; transform: scaleX(0); }
+.jk-dot {
+  position: absolute;
+  left: -7px;
+  top: -6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f1f4f9;
+  box-shadow: 0 0 0 6px rgba(241, 244, 249, 0.1), 0 0 18px rgba(241, 244, 249, 0.35);
+}
+
+/* one question at a time */
+.jk-steps { display: grid; min-height: clamp(210px, 28svh, 280px); margin-top: clamp(30px, 4.4svh, 48px); }
+.jk-step { grid-area: 1 / 1; align-self: start; }
+.jk-step[data-on="false"] { pointer-events: none; }
+.jny-root .jk-ask {
+  display: block;
+  margin: 0;
+  font-size: clamp(30px, 3vw, 50px);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  color: #f1f4f9;
+}
+.jk-answer { margin-top: clamp(20px, 2.6svh, 30px); }
+.jny-root .jk-answer :is(textarea, input:not([type="radio"])) {
+  display: block;
+  width: 100%;
+  padding: 8px 0 14px;
+  border: 0;
+  border-bottom: 1.5px solid rgba(241, 244, 249, 0.16);
+  border-radius: 0;
+  background: none;
+  color: #f1f4f9;
+  caret-color: #f1f4f9;
+  font: inherit;
+  font-size: clamp(20px, 1.6vw, 25px);
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+  resize: none;
+  outline: none;
+  box-shadow: none;
+  transition: border-color 0.5s var(--k-spring);
+}
+.jny-root .jk-answer :is(textarea, input):focus { border-bottom-color: #f1f4f9; }
+.jny-root .jk-answer [aria-invalid="true"] { border-bottom-color: #ff9a9a; }
+.jny-root .jk-answer ::placeholder { color: #4f6079; opacity: 1; }
+
+.jk-plans { position: relative; display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0 6px; }
+.jny-pick-capsule { background: #f1f4f9; box-shadow: 0 14px 30px -16px rgba(0, 0, 0, 0.6); }
+.jny-root .jk-plans label {
+  position: relative;
+  z-index: 1;
+  padding: 13px 20px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(241, 244, 249, 0.16);
+  color: #c3cede;
+  font-size: 15.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.5s var(--k-spring), box-shadow 0.5s var(--k-spring), scale 0.4s var(--k-spring);
+}
+.jny-root .jk-plans label.on { color: var(--k-ink); box-shadow: inset 0 0 0 1px transparent; }
+.jny-root .jk-plans label:active { scale: 0.97; }
+.jny-root .jk-plans label:focus-within { outline: 2px solid #f1f4f9; outline-offset: 3px; }
+.jk-plans input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+
+.jny-root .jk-error { min-height: 22px; margin: 12px 0 0; color: #ffb4b4; font-size: 14px; }
+.jny-root .jk-note { margin: 20px 0 0; max-width: 40ch; color: #a9b6c8; font-size: 16px; line-height: 1.55; }
+.jny-root .jk-note button { color: #f1f4f9; text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px; cursor: pointer; }
+
+.jk-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; }
+.jny-root .jk-back {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(241, 244, 249, 0.16);
+  color: #c3cede;
+  cursor: pointer;
+  transition: transform 0.7s var(--k-spring), color 0.4s var(--k-spring);
+}
+.jny-root .jk-back:disabled { transform: scale(0); pointer-events: none; }
+.jny-root .jk-back:active { scale: 0.95; }
+.jny-root .jk-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 7px 7px 7px 26px;
+  border-radius: 999px;
+  background: #f1f4f9;
+  color: var(--k-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: scale 0.4s var(--k-spring), background-color 0.4s var(--k-spring);
+}
+.jny-root .jk-next:active { scale: 0.97; }
+@media (hover: hover) and (pointer: fine) {
+  .jny-root .jk-next:hover { background: #fff; }
+  .jny-root .jk-next:hover .jk-next-ic { translate: 3px 0; }
+  .jny-root .jk-back:hover { color: #f1f4f9; }
+}
+.jk-next-t { display: grid; justify-items: center; overflow: hidden; padding-block: 0.15em; margin-block: -0.15em; }
+.jk-next-t > span { grid-area: 1 / 1; white-space: nowrap; transform: translate3d(0, 140%, 0); transition: transform 0.8s var(--k-spring); }
+.jk-next-t > span[data-on="true"] { transform: none; }
+.jk-next-ic { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--k-ink); color: #f1f4f9; transition: translate 0.6s var(--k-spring); }
+
+
+/* The footer is the same night. */
+.jny-root .jny-footer.jny-dark { display: flow-root; background: #0b1422; border-top: 0; color: #e6ecf4; }
+.jny-root .jny-footer.jny-dark .jny-footer-mark { color: #16233a; }
+.jny-root .jny-footer.jny-dark :is(.legal, .row, .row a) { color: #8d9bb0; }
+.jny-root .jny-footer.jny-dark .row a:hover { color: #f1f4f9; }
+
+/* ---------- phones ---------- */
+@media (max-width: 860px) {
+  /* Phones: title, then the object, then the choices. */
+  .jp-layout { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 8px; }
+  .jp-side { display: contents; }
+  .jp-layout .jc-h2 { order: 1; }
+  .jp-scene { order: 2; height: 330px; }
+  .jp-world { --sw: min(40vw, 170px); }
+  .jp-options { order: 3; margin-top: 0; }
+  .jp-lines { order: 4; }
+  .jq-layout, .jk-layout { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  /* Phones: the conversation sits right under the title, the questions below it. */
+  .jq-side { display: contents; }
+  .jq-layout { gap: 24px; }
+  .jq-layout .jc-h2 { order: 1; }
+  .jq-thread { order: 2; min-height: 330px; align-content: start; }
+  .jq-asks { order: 3; margin-top: 0; }
+  .jny-root .jq-reply-page { font-size: 15.5px; padding: 17px 19px 19px; }
+  .jny-root .jq-you-page { font-size: 15.5px; }
+  .jq-face { width: 34px; height: 34px; font-size: 11px; }
+  .jk-layout { min-height: 0; }
+  .jny-root .jk-ask { font-size: clamp(27px, 7.6vw, 34px); }
+  .jk-core { border-radius: 30px; }
+  .jk-shell { border-radius: 37px; }
+  .jny-root .jny-chapters .jc-contact { padding-top: clamp(200px, 30svh, 300px); }
+}

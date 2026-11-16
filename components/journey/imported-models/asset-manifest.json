@@ -1,0 +1,46 @@
+{
+  "cloud": {
+    "url": "/models/journey/optimized/cloud.75e08c3733ce.glb",
+    "bytes": 3014080,
+    "maxPositionError": 0.00011335214160987002,
+    "triangles": 294128
+  },
+  "dashboard": {
+    "url": "/models/journey/optimized/dashboard.004d2f69346d.glb",
+    "bytes": 1674156,
+    "maxPositionError": 0.00009664541488837221,
+    "triangles": 185052
+  },
+  "irradiance836": {
+    "url": "/models/showroom/optimized/irradiance836.a75700ad4883.png",
+    "bytes": 237645
+  },
+  "irradiance418": {
+    "url": "/models/showroom/optimized/irradiance418.f293a169a270.png",
+    "bytes": 60273
+  },
+  "showroomRooms": {
+    "url": "/models/showroom/optimized/showroomRooms.1955fb328792.glb",
+    "bytes": 2023780
+  },
+  "showroomMacbook": {
+    "url": "/models/showroom/optimized/showroomMacbook.97a5d8a79a82.glb",
+    "bytes": 623404
+  },
+  "showroomIphone": {
+    "url": "/models/showroom/optimized/showroomIphone.2ede8cb279c7.glb",
+    "bytes": 1077472
+  },
+  "showroomRoomsLow": {
+    "url": "/models/showroom/optimized/showroomRoomsLow.e6dde9e1bdca.glb",
+    "bytes": 1193104
+  },
+  "showroomMacbookLow": {
+    "url": "/models/showroom/optimized/showroomMacbookLow.3115fba726e9.glb",
+    "bytes": 346336
+  },
+  "showroomIphoneLow": {
+    "url": "/models/showroom/optimized/showroomIphoneLow.5d8c768ef127.glb",
+    "bytes": 608756
+  }
+}

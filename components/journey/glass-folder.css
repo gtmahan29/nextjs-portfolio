@@ -1,0 +1,45 @@
+.glass-archive{position:relative;height:380svh;isolation:isolate;background:#fff;color:#493923;z-index:1;font-family:var(--font-archive),sans-serif}
+.glass-archive-stage{height:100svh;min-height:580px;position:sticky;top:0;overflow:hidden;background:#fff}
+.glass-archive-stage>canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y}
+.glass-archive-heading{position:absolute;top:clamp(94px,11svh,124px);left:clamp(24px,6vw,112px);z-index:2;pointer-events:none;will-change:transform;max-width:460px}
+.jny-root .glass-archive-heading p{font-size:10px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#8d7657;margin:0 0 20px}
+.jny-root .glass-archive-heading h2{font-size:clamp(36px,3.6vw,58px);font-weight:450;line-height:1.02;letter-spacing:-.05em;margin:0}
+.glass-archive-heading h2 em{font-family:Georgia,'Times New Roman',serif;font-weight:400;color:#a17b3e;letter-spacing:-.055em}
+.glass-archive-bottom{position:absolute;bottom:clamp(24px,4svh,44px);left:clamp(24px,6vw,112px);right:clamp(24px,6vw,112px);display:flex;justify-content:space-between;align-items:flex-end;gap:24px;z-index:2;pointer-events:none}
+.glass-archive-cue{display:flex;align-items:center;gap:10px;font-size:12px;color:#8d7657;padding:14px 0}
+.glass-archive-controls{display:flex;align-items:center;gap:40px;transform:translateY(0);pointer-events:auto}
+.glass-archive[data-stage="2"] .glass-archive-controls,.glass-archive-fallback .glass-archive-controls{transform:translateY(0)}
+.glass-archive-project{display:flex;flex-direction:column;gap:6px}
+.glass-archive-project>span{font-size:10px;letter-spacing:.04em;color:#927f66}
+.glass-archive-project button{display:flex;gap:20px;align-items:center;border:0;background:none;color:inherit;font:inherit;font-size:17px;cursor:pointer;padding:0;text-align:left;transition:transform 160ms cubic-bezier(.23,1,.32,1)}
+.glass-archive-controls nav{display:flex;align-items:center;gap:15px}
+.glass-archive-controls nav button{border:1px solid #a17b3e33;border-radius:50%;width:43px;height:43px;display:grid;place-items:center;background:#fff8e78c;color:#6e5431;cursor:pointer;transition:background 160ms ease,transform 160ms cubic-bezier(.23,1,.32,1)}
+@media(hover:hover) and (pointer:fine){.glass-archive-controls nav button:hover{background:#fff;transform:translateY(-1px)}}
+.glass-archive-controls button:active{transform:scale(.97)}
+.glass-archive-controls button:focus-visible,.glass-archive-static button:focus-visible{outline:2px solid #99752f;outline-offset:5px}
+.glass-archive-controls nav>span{font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.glass-archive-controls nav i{font-style:normal;color:#a19078}
+.glass-archive-static{position:absolute;inset:32% 6% 20%;display:flex;gap:20px;align-items:center;justify-content:center}
+.glass-archive-static button{background:#fffdf7;border:1px solid #bba47d22;border-radius:8px;padding:4px;width:30%;max-width:420px;transform:rotate(-4deg);cursor:pointer;color:inherit;font-family:inherit}
+.glass-archive-static button:nth-child(2){transform:translateY(-30px)}
+.glass-archive-static button:nth-child(3){transform:rotate(4deg)}
+.glass-archive-static img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:5px}
+.glass-archive-static span{display:flex;justify-content:space-between;align-items:center;padding:10px 2px;font-size:12px}
+.glass-archive-fallback{height:100svh;min-height:680px}
+@media(max-width:760px){.glass-archive{height:360svh}.glass-archive-stage{min-height:600px}.glass-archive-heading{top:96px;left:24px}.jny-root .glass-archive-heading h2{font-size:41px}.jny-root .glass-archive-heading p{font-size:9px;margin-bottom:14px}.glass-archive-bottom{left:24px;right:24px;bottom:25px;display:block}.glass-archive-cue{font-size:11px;padding:0 0 17px}.glass-archive-controls{justify-content:space-between;gap:10px;transform:translateY(0)}.glass-archive-project button{font-size:14px;gap:6px;max-width:180px}.glass-archive-project>span{font-size:9px}.glass-archive-controls nav{gap:9px}.glass-archive-controls nav button{width:36px;height:36px}.glass-archive-controls nav>span{font-size:10px}.glass-archive-static{inset:35% 12% 20%}.glass-archive-static button{position:absolute;width:80%}.glass-archive-static button:first-child{transform:translateX(-22px) rotate(-9deg)}.glass-archive-static button:nth-child(2){transform:translateY(-20px)}.glass-archive-static button:last-child{transform:translateX(22px) rotate(9deg)}}
+@media(prefers-reduced-motion:reduce){.glass-archive{height:100svh;min-height:680px}.glass-archive-stage{position:relative}.glass-archive-controls{transition:none}}
+
+/* Changing labels rise into place instead of swapping text in a single frame. */
+.glass-archive-swap{animation:glass-archive-swap 520ms cubic-bezier(.23,1,.32,1) backwards}
+.glass-archive-project button.glass-archive-swap{animation-delay:50ms}
+@keyframes glass-archive-swap{from{opacity:0;transform:translate3d(0,7px,0)}}
+@media(prefers-reduced-motion:reduce){.glass-archive-swap{animation:none}}
+
+/* The archive shares the white services canvas. */
+.glass-archive,.glass-archive-stage{background:#fff;}
+.glass-archive-anchor { position: absolute; top: 0; }
+.glass-archive-static .glass-archive-static-current:first-child {
+  width: min(100%, 540px);
+  max-width: none;
+  transform: none;
+}

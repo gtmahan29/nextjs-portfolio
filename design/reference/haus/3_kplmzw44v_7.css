@@ -1,0 +1,1 @@
+.page{width:var(--layout-content-width);max-width:var(--layout-content-max);padding-inline:var(--layout-page-padding);padding-block:var(--space-16);color:var(--ink-secondary);margin-inline:auto;padding-block-end:calc(var(--space-16) + var(--contact-bar-h))}
