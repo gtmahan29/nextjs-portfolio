@@ -18,9 +18,9 @@ export type BuildingKind =
   | "sparkAltar"
   | "shapeStudio"
   | "systemFoundry"
-  | "engineRoom"
-  | "scaleCampus"
-  | "launchObservatory";
+  | "runtimeTestCell"
+  | "capacityBay"
+  | "releaseDesk";
 
 export const STATIONS: Station[] = [
   {
@@ -75,13 +75,13 @@ export const STATIONS: Station[] = [
     color: "#10b981",
     colorInt: 0x10b981,
     worry: "Will it feel slow or break for real users?",
-    answer: "Pages load fast, interactions stay smooth, and the flows that matter are tested before launch.",
-    tools: ["Fast loading", "Automated tests", "Performance budgets"],
+    answer: "Before launch, I measure load times, check how quickly interactions respond, and test the flows your users rely on.",
+    tools: ["Load times", "Interaction latency", "Automated flow tests"],
     deliverable: "A product that’s fast and tested",
-    building: "engineRoom",
+    building: "runtimeTestCell",
     cardBadge: "04 · RUNTIME",
     cardTitle: "COMING ALIVE",
-    cardMetric: "60FPS PRODUCTION APP",
+    cardMetric: "VERIFIED FOR RELEASE",
   },
   {
     id: 5,
@@ -90,10 +90,10 @@ export const STATIONS: Station[] = [
     color: "#f97316",
     colorInt: 0xf97316,
     worry: "What happens when more people show up?",
-    answer: "The setup grows with demand, and updates go out automatically without taking the site down.",
-    tools: ["Cloud hosting", "Automated releases", "Caching"],
+    answer: "When traffic rises, more capacity comes online. During updates, requests move to healthy servers so the site stays available.",
+    tools: ["Autoscaling", "Load balancing", "Rolling releases"],
     deliverable: "Infrastructure that grows with you",
-    building: "scaleCampus",
+    building: "capacityBay",
     cardBadge: "05 · SCALE",
     cardTitle: "GROWING",
     cardMetric: "ELASTIC INFRASTRUCTURE",
@@ -108,7 +108,7 @@ export const STATIONS: Station[] = [
     answer: "We launch together with monitoring in place. You get the code, the accounts and the documentation, and I stay around for what comes next.",
     tools: ["Monitoring", "Analytics", "Full handover"],
     deliverable: "A live product that’s fully yours",
-    building: "launchObservatory",
+    building: "releaseDesk",
     cardBadge: "06 · LAUNCH",
     cardTitle: "OUT IN THE WORLD",
     cardMetric: "FULL IP & TELEMETRY",

@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import OpalKeyboard from "./opal-keyboard";
 import { createStagedMotion, BEFORE } from "./staged-motion";
 import { Words, pop } from "./staged-words";
-import { SPRING_PEAK } from "./motion-curve";
+import { SPRING_PEAK, springCurve } from "./motion-curve";
 import { play } from "./sfx";
 import "./build-story.css";
 
@@ -16,6 +16,29 @@ import "./build-story.css";
  *      keyboard types the headline key by key
  *   3  complete: the chart draws, the page goes live, a cursor clicks
  * Scroll only picks the beat; every element springs on its own clock.
+ *
+ * Around the display, the tools of each stage come out from behind the
+ * screen, are caught in place, draw a thin line to what they describe, and
+ * leave upward when the stage changes (references: spring-motion-choreography).
+ *
+ * MOTION SCORE — the build's surroundings
+ * Trigger: scroll beats (BEAT_AT), exit before enter, lag 0.16
+ * | Beat | Element                 | Pattern | Goal                         | Delay (ms)        | Exit    | Sound            |
+ * |------|-------------------------|---------|------------------------------|-------------------|---------|------------------|
+ * | 0    | crop marks ×4           | P3      | pop from each corner         | 220 +70 each      | until 1 | ui_pop @.16+PEAK |
+ * | 0    | width / height rulers   | P3      | line grows from centre       | 420, 520          | until 0 |                  |
+ * | 0    | ruler labels            | P3      | pop                          | 560, 660          | until 0 |                  |
+ * | 1    | grid card (right)       | P3+trav | out from behind the screen   | 300               | until 1 | ui_pop @.16+PEAK |
+ * | 1    | spacing card + 5 bars   | P3, P4  | card, then bars grow         | 420; 560 +70 each | until 1 |                  |
+ * | 1    | layers card + 4 rows    | P3, P2  | card, then rows rise         | 380; 520 +80 each | until 1 |                  |
+ * | 1    | leader lines + dots     | P11     | draw from the element out    | 480–620           | until 1 |                  |
+ * | 2    | palette card + 5 swatch | P3, P5b | squares become circles       | 260; 400 +80 each | until 2 | ui_pop @.16+PEAK |
+ * | 2    | type card, "Aa"         | P3, P1  | card, then glyphs rise       | 360; 500          | until 2 |                  |
+ * | 2    | spring curve card       | P3, P16 | curve draws, a dot rides it  | 420; 600          | until 2 |                  |
+ * | 3    | phone                   | P3+trav | slides out from behind       | 300               | until 3 | ui_pop @.16+PEAK |
+ * | 3    | live toast, signups     | P3      | after the cursor's click     | 2100, 2500        | until 3 |                  |
+ * Reduced motion: every part snaps to its beat; the curve dot rests at the end.
+ * Phone / narrow (≤1180px): only crop marks and rulers; the cards would crowd the screen.
  */
 const STEPS = ["From nothing.", "Structure first.", "Then every detail.", "Made real."];
 const BEAT_AT = [0.08, 0.27, 0.5, 0.78];
@@ -33,6 +56,122 @@ const Wire = ({ order, children }: { order: number; children?: React.ReactNode }
 const Done = ({ order, className = "", children }: { order: number; className?: string; children: React.ReactNode }) =>
   <span className={`ds ${className}`} {...pop(2, 160 + order * 90)}>{children}</span>;
 
+/* ---------------------------------------------------------------------------
+   The surroundings. Everything here is placed in the display's own box, so it
+   scales and travels with the screen. Cards sit behind the bezel and come out
+   from under it (--fx, --fy point back toward the screen); the lead lines sit
+   above it and draw from the element they describe out to their card.
+   ------------------------------------------------------------------------- */
+const CURVE = Array.from({ length: 49 }, (_, k) => {
+  const u = k / 48;
+  return `${k ? "L" : "M"}${(u * 100).toFixed(2)} ${(52 - springCurve(u) * 38).toFixed(2)}`;
+}).join("");
+
+/** Lead lines in the screen's 1000 × 625 space, authored from the element out to its card (they draw in that direction). */
+const LEADS = [
+  { beat: 1, delay: 480, d: "M960 46 L990 64 H1076", dot: [960, 46] },
+  { beat: 1, delay: 560, d: "M975 300 H1076", dot: [975, 300] },
+  { beat: 1, delay: 520, d: "M28 430 L0 452 H-76", dot: [28, 430] },
+  { beat: 2, delay: 420, d: "M950 110 L990 64 H1076", dot: [950, 110] },
+  { beat: 2, delay: 560, d: "M905 400 L1000 300 H1076", dot: [905, 400] },
+  { beat: 2, delay: 500, d: "M50 210 H12 V452 H-76", dot: [50, 210] },
+];
+
+const sat = (beat: number, start: number, until = beat) => pop(beat, start, until);
+
+function Orbit() {
+  return (
+    <div className="bs-orbit" aria-hidden="true">
+      {/* From nothing: the frame is measured before anything is drawn. */}
+      {(["tl", "tr", "bl", "br"] as const).map((corner, i) => <i key={corner} className={`bs-crop bs-crop-${corner}`} {...pop(0, 220 + i * 70, 1)} />)}
+      <i className="bs-ruler bs-ruler-x" {...pop(0, 420, 0)} />
+      <b className="bs-ruler-label bs-ruler-label-x" {...pop(0, 560, 0)}>1440</b>
+      <i className="bs-ruler bs-ruler-y" {...pop(0, 520, 0)} />
+      <b className="bs-ruler-label bs-ruler-label-y" {...pop(0, 660, 0)}>900</b>
+
+      {/* Structure first: the grid, the spacing scale and the layers. */}
+      <div className="bs-sat bs-right bs-slot-a" {...sat(1, 300)}>
+        <span className="bs-card-k">Grid</span>
+        <span className="bs-grid-ico">{Array.from({ length: 12 }, (_, i) => <i key={i} {...pop(1, 420 + i * 30, 1)} />)}</span>
+        <span className="bs-card-v">12 columns · 24 gutter</span>
+      </div>
+      <div className="bs-sat bs-right bs-slot-b" {...sat(1, 420)}>
+        <span className="bs-card-k">Spacing</span>
+        <span className="bs-space">
+          {[4, 8, 16, 24, 40].map((n, i) => (
+            <span key={n}><i style={{ width: `${n * 2}px` }} {...pop(1, 560 + i * 70, 1)} /><em>{n}</em></span>
+          ))}
+        </span>
+      </div>
+      <div className="bs-sat bs-left bs-slot-c" {...sat(1, 380)}>
+        <span className="bs-card-k">Layers</span>
+        <span className="bs-layers">
+          {["Navigation", "Hero", "Launch plan", "Logos"].map((row, i) => (
+            <span key={row} className="jm-m jm-b"><span className="jm-in" {...pop(1, 520 + i * 80, 1)}><i />{row}</span></span>
+          ))}
+        </span>
+      </div>
+
+      {/* Then every detail: colour, type and motion. */}
+      <div className="bs-sat bs-right bs-slot-a" {...sat(2, 260)}>
+        <span className="bs-card-k">Colour</span>
+        <span className="bs-swatches">
+          {["#3044f5", "#8f6bff", "#ff8a6b", "#11141b", "#f8f6f2"].map((c, i) => (
+            <i key={c} style={{ background: c }} {...pop(2, 400 + i * 80, 2)} />
+          ))}
+        </span>
+      </div>
+      <div className="bs-sat bs-right bs-slot-b" {...sat(2, 420)}>
+        <span className="bs-card-k">Motion</span>
+        <svg className="bs-curve" viewBox="-4 6 108 52" preserveAspectRatio="none">
+          <line x1="0" x2="100" y1="14" y2="14" />
+          <path d={CURVE} pathLength={1} {...pop(2, 600, 2)} />
+          <circle className="bs-curve-dot" cx="0" cy="52" r="0" />
+        </svg>
+        <span className="bs-card-v">One spring · 64 / 11</span>
+      </div>
+      <div className="bs-sat bs-left bs-slot-c" {...sat(2, 360)}>
+        <span className="bs-card-k">Type</span>
+        <span className="bs-type">
+          <span className="jm-m"><span className="jm-in" {...pop(2, 500, 2)}>Aa</span></span>
+          <span className="bs-card-v">Outfit · 500 · −6%</span>
+        </span>
+      </div>
+
+      {/* Made real: the same page on a phone, live, with its first visitors. */}
+      <div className="bs-phone" {...sat(3, 300)}>
+        <span className="bs-phone-screen">
+          <i className="bs-phone-logo" />
+          <b /><b /><b className="short" />
+          <i className="bs-phone-cta" />
+          <i className="bs-phone-art" />
+        </span>
+      </div>
+      <div className="bs-sat bs-left bs-slot-d" {...sat(3, 2100)}>
+        <span className="bs-live"><i />Live</span>
+        <span className="bs-card-v">kiln.app</span>
+      </div>
+      <div className="bs-sat bs-left bs-slot-e" {...sat(3, 2500)}>
+        <span className="bs-faces"><i /><i /><i /></span>
+        <span className="bs-card-v">12 new sign-ups</span>
+      </div>
+    </div>
+  );
+}
+
+function Leads() {
+  return (
+    <svg className="bs-leads" viewBox="0 0 1000 625" preserveAspectRatio="none" aria-hidden="true">
+      {LEADS.map((lead, i) => (
+        <g key={i}>
+          <path d={lead.d} pathLength={1} {...pop(lead.beat, lead.delay, lead.beat)} />
+          <circle cx={lead.dot[0]} cy={lead.dot[1]} r="5" {...pop(lead.beat, lead.delay - 120, lead.beat)} />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export default function IsometricStory() {
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -42,6 +181,7 @@ export default function IsometricStory() {
     const display = host.querySelector<HTMLElement>(".bs-display")!;
     const headline = host.querySelector<HTMLElement>("[data-typed]")!;
     const opal = keyboard.querySelector<HTMLElement>("[data-opal-keyboard]");
+    const curveDot = host.querySelector<SVGCircleElement>(".bs-curve-dot");
     const motion = createStagedMotion(Array.from(host.querySelectorAll<HTMLElement>("[data-beat]")), { lag: 0.16 });
     let beat = BEFORE, last = performance.now(), beatAt = 0, typed = "", demoKey = -1, hidden = true;
 
@@ -70,11 +210,18 @@ export default function IsometricStory() {
       const next = beatOf(p);
       if (next !== beat) {
         // Beat 2 is heard through the typing itself.
-        if (next > beat && next >= 0 && next !== 2 && !reduced) play("ui_pop", 0.16 + SPRING_PEAK);
+        if (next > beat && next >= 0 && !reduced) play("ui_pop", 0.16 + SPRING_PEAK);
         beat = next; beatAt = now; demoKey = -1;
         host.dataset.stage = beat < 0 ? "nothing" : ["frame", "wireframe", "design", "complete"][beat];
       }
       motion.update(beat, dt, reduced);
+      // The spring, demonstrated: a dot rides the curve, rests on the target, and starts again.
+      if (beat === 2 && curveDot) {
+        const t = reduced ? 9 : (now / 1000) % 2.4, u = Math.min(1, t / 1.6);
+        curveDot.setAttribute("cx", (u * 100).toFixed(2));
+        curveDot.setAttribute("cy", (52 - springCurve(u) * 38).toFixed(2));
+        curveDot.setAttribute("r", (3.2 * springCurve(Math.min(1, t / 0.5))).toFixed(2));
+      }
 
       // Keyboard and display travel together with scroll: in from below, out with the clouds.
       const arrival = reduced ? 1 : silk(p / 0.16), anticipation = reduced ? 0 : ease((units - 5.25) / 0.18), departure = reduced ? 0 : silk((units - 5.43) / 0.69);
@@ -100,6 +247,7 @@ export default function IsometricStory() {
     </div>
 
     <div className="bs-display">
+      <Orbit />
       <svg className="bs-outline" viewBox="0 0 1000 625" preserveAspectRatio="none" aria-hidden="true">
         <rect x="2" y="2" width="996" height="621" rx="24" pathLength={1} vectorEffect="non-scaling-stroke" {...pop(0)} />
       </svg>
@@ -162,6 +310,7 @@ export default function IsometricStory() {
           <span className="bs-click" aria-hidden="true" {...pop(3, 1750)} />
         </div>
       </div>
+      <Leads />
     </div>
     <div className="build-keyboard"><OpalKeyboard /></div>
   </div>;

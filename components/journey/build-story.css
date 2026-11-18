@@ -54,7 +54,8 @@
   inset: 0;
   display: flex;
   align-items: center;
-  clip-path: inset(-40% calc((1 - min(1, var(--e, 0))) * 100%) -40% -10%);
+  /* The left margin only opens once the element starts to arrive, so nothing leaks before it. */
+  clip-path: inset(-40% calc((1 - min(1, var(--e, 0))) * 100%) -40% calc(min(1, var(--e, 0) * 6) * -10%));
   translate: 0 calc((1 - var(--e, 0)) * 0.8cqw);
   color: #11141b;
 }
@@ -141,4 +142,159 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .ds.h1 .caret, .keyboard-build[data-stage="complete"] .cta-main { animation: none; }
+}
+
+/* =====================================================================
+   The surroundings: the tools of each stage, around the screen.
+   All placed in the display's own box (so they scale and depart with it).
+   Cards sit under the bezel and come out from behind it: --fx / --fy point
+   from a card's resting place back toward the screen, and the same --e that
+   scales it carries it out, so it overshoots past its place and is caught.
+   ===================================================================== */
+.bs-orbit { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.bs-display > .bs-bezel { z-index: 1; }
+
+/* crop marks: measured before anything is drawn */
+.bs-crop { position: absolute; width: 18px; height: 18px; border: 0 solid #0e2236; transform: scale(max(0, calc(var(--e, 0) - var(--x, 0)))); }
+.bs-crop-tl { left: -16px; top: -16px; border-width: 1.5px 0 0 1.5px; transform-origin: 100% 100%; }
+.bs-crop-tr { right: -16px; top: -16px; border-width: 1.5px 1.5px 0 0; transform-origin: 0 100%; }
+.bs-crop-bl { left: -16px; bottom: -16px; border-width: 0 0 1.5px 1.5px; transform-origin: 100% 0; }
+.bs-crop-br { right: -16px; bottom: -16px; border-width: 0 1.5px 1.5px 0; transform-origin: 0 0; }
+
+/* rulers: a line that grows from its centre, with end ticks, and a size label */
+.bs-ruler { position: absolute; display: block; background: rgba(14, 34, 54, 0.4); }
+.bs-ruler::before, .bs-ruler::after { content: ""; position: absolute; background: rgba(14, 34, 54, 0.55); }
+.bs-ruler-x { left: 0; right: 0; bottom: -38px; height: 1px; transform: scaleX(max(0, calc(var(--e, 0) - var(--x, 0)))); }
+.bs-ruler-x::before, .bs-ruler-x::after { top: -5px; width: 1px; height: 11px; }
+.bs-ruler-x::before { left: 0; }
+.bs-ruler-x::after { right: 0; }
+.bs-ruler-y { top: 0; bottom: 0; right: -38px; width: 1px; transform: scaleY(max(0, calc(var(--e, 0) - var(--x, 0)))); }
+.bs-ruler-y::before, .bs-ruler-y::after { left: -5px; width: 11px; height: 1px; }
+.bs-ruler-y::before { top: 0; }
+.bs-ruler-y::after { bottom: 0; }
+.bs-ruler-label { position: absolute; padding: 3px 8px; border-radius: 99px; background: #0e2236; color: #f3f6fb; font-size: 11px; font-weight: 500; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; transform: translate(-50%, -50%) scale(max(0, calc(var(--e, 0) - var(--x, 0)))); }
+.bs-ruler-label-x { left: 50%; top: calc(100% + 38px); }
+.bs-ruler-label-y { right: -38px; top: 50%; transform: translate(50%, -50%) scale(max(0, calc(var(--e, 0) - var(--x, 0)))); }
+
+/* the cards */
+.bs-sat {
+  --fx: -150px;
+  --fy: 0px;
+  position: absolute;
+  display: grid;
+  gap: 10px;
+  width: clamp(176px, 14vw, 224px);
+  padding: 14px 16px 15px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 247, 251, 0.9));
+  box-shadow: inset 0 0 0 1px rgba(14, 34, 54, 0.07), inset 0 1px 0 #fff, 0 2px 5px rgba(14, 34, 54, 0.05), 0 26px 48px -28px rgba(14, 34, 54, 0.45);
+  color: #0e2236;
+  font-family: var(--font-page), ui-sans-serif, system-ui, sans-serif;
+  text-align: left;
+  justify-items: start;
+  transform:
+    translate3d(calc((1 - var(--e, 0)) * var(--fx)), calc((1 - var(--e, 0)) * var(--fy) - var(--x, 0) * 26px), 0)
+    scale(max(0, calc(var(--e, 0) - var(--x, 0))));
+}
+.bs-right { left: calc(100% + clamp(30px, 3.4vw, 60px)); transform-origin: 0 50%; }
+.bs-left { --fx: 150px; right: calc(100% + clamp(30px, 3.4vw, 60px)); transform-origin: 100% 50%; }
+.bs-slot-a { top: 2%; --fy: 30px; }
+.bs-slot-b { top: 44%; --fy: -20px; }
+.bs-slot-c { top: 64%; }
+.bs-slot-d { top: 62%; }
+.bs-slot-e { top: 84%; }
+.bs-card-k { color: #6a7a8f; font-size: 10.5px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
+.bs-card-v { color: #0e2236; font-size: 13px; font-weight: 500; letter-spacing: -0.01em; }
+
+/* grid: twelve columns grow down */
+.bs-grid-ico { width: 100%; display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; height: 34px; }
+.bs-grid-ico i { border-radius: 2px; background: rgba(48, 68, 245, 0.16); box-shadow: inset 0 0 0 1px rgba(48, 68, 245, 0.28); transform-origin: 50% 0; transform: scaleY(max(0, calc(var(--e, 0) - var(--x, 0)))); }
+
+/* spacing: five bars grow from the left */
+.bs-space { width: 100%; display: grid; gap: 6px; }
+.bs-space > span { display: flex; align-items: center; gap: 10px; }
+.bs-space i { height: 8px; border-radius: 3px; background: #3044f5; transform-origin: 0 50%; transform: scaleX(max(0, calc(var(--e, 0) - var(--x, 0)))); }
+.bs-space em { color: #6a7a8f; font-size: 11px; font-style: normal; font-variant-numeric: tabular-nums; }
+
+/* layers: rows rise, each with a small frame mark */
+.bs-layers { display: grid; gap: 4px; font-size: 13px; font-weight: 500; }
+.bs-layers .jm-in { display: flex; align-items: center; gap: 8px; }
+.bs-layers .jm-in i { width: 10px; height: 10px; border-radius: 3px; box-shadow: inset 0 0 0 1.5px #3044f5; }
+.bs-layers .jm-m:nth-child(n + 2) .jm-in { padding-left: 16px; }
+
+/* colour: grey squares become coloured circles; one value drives both */
+.bs-swatches { display: grid; grid-template-columns: repeat(5, minmax(0, 26px)); gap: clamp(4px, 0.5vw, 8px); width: 100%; }
+.bs-swatches i {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: calc(4px + 9px * min(1, var(--e, 0)));
+  box-shadow: inset 0 0 0 1px rgba(14, 34, 54, 0.1), 0 6px 12px -6px rgba(14, 34, 54, 0.4);
+  transform: scale(max(0, calc(var(--e, 0) - var(--x, 0)))) rotate(calc((1 - var(--e, 0)) * -45deg));
+}
+
+/* motion: the site's own spring, drawn, with a dot that rides it */
+.bs-curve { width: 100%; height: 58px; overflow: visible; }
+.bs-curve line { stroke: rgba(14, 34, 54, 0.18); stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
+.bs-curve path { fill: none; stroke: #3044f5; stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: calc(1 - min(1, var(--e, 0))); }
+.bs-curve-dot { fill: #ff7a59; }
+
+/* type */
+.bs-type { display: grid; gap: 4px; }
+.bs-type .jm-in { font-size: 46px; font-weight: 500; line-height: 1; letter-spacing: -0.06em; }
+
+/* made real: the phone slides out from behind the screen */
+.bs-phone {
+  --fx: -70%;
+  --fy: 0px;
+  position: absolute;
+  left: calc(100% + clamp(30px, 3.4vw, 60px));
+  top: 2%;
+  height: 96%;
+  aspect-ratio: 9 / 19;
+  padding: 7px;
+  border-radius: 26px;
+  background: linear-gradient(160deg, #222838, #0c0f17 60%, #151a26);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 40px 70px -36px rgba(14, 34, 60, 0.6);
+  transform-origin: 0 50%;
+  transform:
+    translate3d(calc((1 - var(--e, 0)) * var(--fx)), calc(var(--x, 0) * -26px), 0)
+    rotate(calc((1 - var(--e, 0)) * -8deg))
+    scale(max(0, calc(var(--e, 0) - var(--x, 0))));
+}
+.bs-phone-screen { display: flex; flex-direction: column; gap: 7%; height: 100%; padding: 16% 11% 10%; border-radius: 20px; background: radial-gradient(90% 60% at 80% 20%, #e9e6ff, rgba(233, 230, 255, 0) 70%), #f8f6f2; overflow: hidden; }
+.bs-phone-logo { width: 20%; aspect-ratio: 1; border-radius: 30%; background: conic-gradient(from 210deg, #3044f5, #8d5cf6, #ff8a6b, #3044f5); }
+.bs-phone-screen b { display: block; height: 7%; border-radius: 4px; background: #11141b; }
+.bs-phone-screen b.short { width: 60%; }
+.bs-phone-cta { width: 52%; height: 8%; border-radius: 99px; background: #3044f5; }
+.bs-phone-art { flex: 1; border-radius: 12px; background: radial-gradient(60% 60% at 20% 18%, #ffb68f, rgba(255, 182, 143, 0) 70%), radial-gradient(70% 70% at 85% 80%, #8f6bff, rgba(143, 107, 255, 0) 72%), linear-gradient(150deg, #5367ff, #2c34c9); }
+
+/* live and first visitors */
+.bs-live { display: inline-flex; align-items: center; gap: 8px; color: #1d7a45; font-size: 13px; font-weight: 600; }
+.bs-live i { width: 9px; height: 9px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.22); animation: bs-live 1.6s var(--bs-spring) infinite; }
+@keyframes bs-live { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.35); } }
+.bs-faces { display: flex; }
+.bs-faces i { width: 24px; height: 24px; margin-right: -7px; border-radius: 50%; border: 2px solid #fff; background: linear-gradient(135deg, #ffcfb2, #ff8e72); }
+.bs-faces i:nth-child(2) { background: linear-gradient(135deg, #c9d2ff, #6e7dff); }
+.bs-faces i:nth-child(3) { background: linear-gradient(135deg, #d6f3e1, #4bb57c); }
+
+/* lead lines: above the bezel, drawn from the element out to its card */
+.bs-leads { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.bs-leads path { fill: none; stroke: #3044f5; stroke-width: 1.25; stroke-linejoin: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: calc(1 - min(1, var(--e, 0)) - var(--x, 0)); }
+/* The dot's stroke scales with it (no non-scaling stroke), so at scale 0 nothing is left behind. */
+.bs-leads circle { fill: #fff; stroke: #3044f5; stroke-width: 2.4; transform-box: fill-box; transform-origin: 50% 50%; transform: scale(max(0, calc(var(--e, 0) - var(--x, 0)))); }
+
+/* Narrow screens: the cards would crowd the screen; keep the measuring marks. */
+@media (max-width: 1180px) {
+  .bs-sat, .bs-phone, .bs-leads { display: none; }
+}
+@media (max-width: 700px) {
+  .bs-ruler-y, .bs-ruler-label-y { display: none; }
+  .bs-crop { width: 12px; height: 12px; }
+  .bs-crop-tl, .bs-crop-bl { left: -7px; }
+  .bs-crop-tr, .bs-crop-br { right: -7px; }
+  .bs-crop-tl, .bs-crop-tr { top: -9px; }
+  .bs-crop-bl, .bs-crop-br { bottom: -9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bs-live i { animation: none; }
 }

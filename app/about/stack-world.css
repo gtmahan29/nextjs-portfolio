@@ -1,0 +1,140 @@
+/* =========================================================================
+   The stack world (hero). The canvas fills the section; the copy column sits over its left
+   side and the board is framed in the space to its right (world.ts reads the same edge).
+   Surfaces over the canvas are solid paper-white, not glass: the scene behind them is busy.
+   ========================================================================= */
+.sw {
+  position: relative; height: 100svh; min-height: 700px; overflow: hidden;
+  background:
+    radial-gradient(48% 58% at 67% 56%, #fbfcff 0%, rgba(251, 252, 255, 0) 72%),
+    linear-gradient(180deg, #e2e8f2 0%, var(--paper) 78%);
+}
+.sw-stage { position: absolute; inset: 0; }
+.sw-stage::after {
+  /* A paper veil behind the copy: when a station is open the scene runs under the text and recedes there. */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(90deg, var(--paper) 0%, rgba(238, 241, 246, .92) var(--veil, 30%), rgba(238, 241, 246, 0) calc(var(--veil, 30%) + 14%));
+}
+.sw-canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; -webkit-tap-highlight-color: transparent; outline: none; }
+.sw[data-fail] .sw-canvas, .sw[data-fail] .sw-hint, .sw[data-open] .sw-hint { display: none; }
+
+/* The copy column: its pages share one cell and trade places on the spring. */
+.sw-grid { position: relative; height: 100%; display: grid; align-items: center; padding: 108px 0 128px; pointer-events: none; }
+.sw-copy { display: grid; width: min(100%, 31vw, 540px); min-width: 380px; }
+.sw-page { grid-area: 1 / 1; align-self: center; pointer-events: auto; }
+.sw-page[inert] { pointer-events: none; }
+
+.ab-name { margin: 0; font-family: var(--display); font-size: clamp(64px, 7.6vw, 148px); font-weight: 700; line-height: .86; letter-spacing: -.02em; color: var(--ink); }
+.ab-name > span { display: block; }
+.ab-role { margin: 26px 0 0; font-size: clamp(21px, 1.8vw, 28px); font-weight: 600; letter-spacing: -.03em; }
+.ab-lede { max-width: 31em; margin: 12px 0 0; font-size: clamp(15.5px, 1.1vw, 17.5px); line-height: 1.6; color: var(--muted); text-wrap: pretty; }
+.ab-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.ab-btn { border: 0; cursor: pointer; font-family: inherit; }
+.ab-btn:disabled { cursor: not-allowed; opacity: .55; }
+
+/* A station's page. */
+.sw-back { margin: 0 0 22px; }
+.sw-back button {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border: 0; border-radius: 999px; cursor: pointer;
+  background: #fff; color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 8px 20px -14px rgba(11, 18, 32, .45);
+  transition: scale .45s var(--ease-spring);
+}
+.sw-back button:active { scale: .96; }
+.sw-back svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sw-label { margin: 0; font-family: var(--display); font-size: clamp(54px, 5.4vw, 98px); font-weight: 700; line-height: .9; letter-spacing: -.02em; }
+.sw-label i { display: inline-block; width: .32em; height: .32em; margin-right: .16em; border-radius: 50%; background: var(--c); vertical-align: .1em; }
+.sw-title { margin: 18px 0 0; font-size: clamp(21px, 1.8vw, 28px); font-weight: 600; line-height: 1.2; letter-spacing: -.03em; }
+.sw-text { max-width: 31em; margin: 12px 0 0; font-size: clamp(15px, 1.05vw, 16.5px); line-height: 1.6; color: var(--muted); text-wrap: pretty; }
+.sw-tools { display: flex; flex-wrap: wrap; gap: 7px; margin: 20px 0 0; padding: 0; list-style: none; }
+.sw-tools li { padding: 6px 13px; border-radius: 999px; background: #fff; box-shadow: 0 6px 14px -11px rgba(11, 18, 32, .5); font-size: 13.5px; font-weight: 500; }
+.sw-gives { display: grid; gap: 7px; margin: 20px 0 0; padding: 0; list-style: none; font-size: 15px; font-weight: 500; }
+.sw-check {
+  display: inline-block; width: 17px; height: 17px; margin-right: 10px; vertical-align: -3px; border-radius: 50%;
+  background: var(--c) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M5.2 9.3l2.4 2.4 5-5.3' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% no-repeat;
+}
+.sw-try { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.sw-try button {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px 9px 12px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: #f3f6fb; font: inherit; font-size: 13.5px; font-weight: 600;
+  box-shadow: 0 12px 24px -16px rgba(11, 18, 32, .8); transition: scale .45s var(--ease-spring);
+}
+.sw-try button::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent); }
+.sw-try button:active { scale: .96; }
+.sw-try button[aria-pressed="true"] { background: var(--c); color: #fff; }
+.sw-try button:disabled { cursor: not-allowed; opacity: .5; }
+
+/* The note a clicked thing opens, anchored above it (world.ts places it every frame). */
+.sw-note {
+  position: absolute; left: 0; top: 0; z-index: 4; width: min(320px, calc(100% - 32px)); padding: 18px 20px 18px;
+  border-radius: 20px; background: #fff; color: var(--ink); visibility: hidden; transform-origin: 50% 100%;
+  box-shadow: 0 1px 0 #fff inset, 0 0 0 1px rgba(11, 18, 32, .05), 0 26px 50px -24px rgba(11, 18, 32, .55);
+}
+.sw-note::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 14px; height: 14px; margin-left: -7px; border-radius: 3px; background: #fff; transform: rotate(45deg); }
+.sw-note-kind { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.sw-note-kind i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.sw-note h3 { margin: 8px 30px 0 0; font-size: 18px; font-weight: 650; line-height: 1.25; letter-spacing: -.02em; }
+.sw-note p:not(.sw-note-kind) { margin: 8px 0 0; font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+.sw-note a { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.sw-note a svg, .sw-note-x svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sw-note-x { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 50%; cursor: pointer; background: var(--paper); color: var(--ink); transition: scale .45s var(--ease-spring); }
+.sw-note-x:active { scale: .92; }
+
+/* The label that pops at a hovered station. */
+.sw-pill {
+  position: absolute; left: 0; top: 0; z-index: 3; display: inline-flex; align-items: center; gap: 8px; margin-top: -10px;
+  padding: 8px 14px 8px 11px; border-radius: 999px; background: var(--ink); color: #f3f6fb; white-space: nowrap;
+  font-size: 13.5px; font-weight: 600; pointer-events: none; visibility: hidden; transform-origin: 50% 100%;
+  box-shadow: 0 14px 30px -14px rgba(11, 18, 32, .7);
+}
+.sw-pill i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+.sw-pill em { font-style: normal; font-weight: 500; color: #a5b0c8; }
+
+/* The dock: the five stations as a rail, and sound. Centred under the board. */
+.sw-dock { position: absolute; left: var(--board-x, 67%); bottom: 30px; z-index: 2; display: flex; align-items: center; gap: 8px; transform: translateX(-50%); }
+.sw-rail { position: relative; display: flex; gap: 2px; padding: 5px; border-radius: 999px; background: #fff; box-shadow: 0 1px 0 #fff inset, 0 18px 40px -24px rgba(11, 18, 32, .55); }
+.sw-capsule { position: absolute; left: 0; top: 0; z-index: 0; border-radius: 999px; background: var(--ink); transform: scale(0); visibility: hidden; pointer-events: none; }
+.sw-tab {
+  position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px 10px 13px; border: 0; border-radius: 999px;
+  background: none; cursor: pointer; font: inherit; font-size: 14px; font-weight: 500; color: var(--muted); white-space: nowrap;
+  transition: color .5s var(--ease-spring), scale .45s var(--ease-spring);
+}
+.sw-tab i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); transition: scale .6s var(--ease-spring); }
+.sw-tab:active { scale: .96; }
+.sw-tab[aria-selected="true"] { color: #f3f6fb; }
+.sw-tab[aria-selected="true"] i { scale: 1.25; }
+@media (hover: hover) and (pointer: fine) { .sw-tab:hover { color: var(--ink); } .sw-tab[aria-selected="true"]:hover { color: #fff; } }
+.sw-icon {
+  display: grid; place-items: center; width: 50px; height: 50px; border: 0; border-radius: 50%; cursor: pointer; flex: none;
+  background: #fff; color: var(--ink); box-shadow: 0 1px 0 #fff inset, 0 18px 40px -24px rgba(11, 18, 32, .55);
+  transition: scale .45s var(--ease-spring), background-color .5s var(--ease-spring), color .5s var(--ease-spring);
+}
+.sw-icon:active { scale: .94; }
+.sw-icon[aria-pressed="true"] { background: var(--ink); color: #f3f6fb; }
+.sw-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.sw-hint { position: absolute; left: var(--board-x, 67%); bottom: 92px; transform: translateX(-50%); white-space: nowrap; margin: 0; font-size: 12.5px; color: var(--dim); pointer-events: none; }
+
+.about-page ::selection { background: rgba(36, 51, 230, .18); }
+
+@media (max-width: 1240px) {
+  .sw-hint { display: none; }
+}
+@media (max-width: 900px) {
+  .sw { height: auto; min-height: 0; display: flex; flex-direction: column; padding-top: 80px; background: linear-gradient(180deg, #e2e8f2 0%, var(--paper) 60%); }
+  .sw-stage { position: relative; inset: auto; height: min(60svh, 132vw); }
+  .sw-stage::after { display: none; }
+  .sw-dock { order: 1; position: relative; left: auto; bottom: auto; transform: none; margin: 4px 0 0; padding: 4px 16px 10px; overflow-x: auto; scrollbar-width: none; }
+  .sw-dock::-webkit-scrollbar { display: none; }
+  .sw-rail { flex: none; }
+  .sw-tab { padding: 9px 13px 9px 11px; font-size: 13.5px; }
+  .sw-icon { width: 46px; height: 46px; }
+  .sw-grid { order: 2; height: auto; padding: 30px 0 72px; }
+  .sw-copy { width: 100%; min-width: 0; }
+  .sw-page { align-self: start; }
+  .ab-name { font-size: clamp(56px, 16vw, 92px); }
+  .sw-label { font-size: clamp(48px, 13vw, 72px); }
+}
+@media (pointer: coarse) { .sw-hint { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .sw *, .sw *::before { transition: none !important; }
+}

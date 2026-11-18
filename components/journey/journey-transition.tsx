@@ -1,5 +1,6 @@
 import {Rise, Words} from "./staged-words";
 import {STATIONS} from "./data";
+import IdeaTicker from "./idea-ticker";
 
 /** The introduction shares the journey's canvas and scroll conductor; its lines are staged by the runtime. */
 export default function JourneyTransition() {
@@ -8,6 +9,8 @@ export default function JourneyTransition() {
       <div className="jny-entry-opening">
         <h2 id="journey-entry-title"><span className="fin-line"><Words text="What should" beat={0} /></span> <span className="fin-line"><Words text="we build?" beat={0} start={110} /></span></h2>
         <p className="jny-entry-description"><Rise beat={0} start={260}>It starts with a conversation.</Rise></p>
+        {/* Pops in with the opening line and leaves with it (the intro stages the wrapper; the bubble runs its own loop). */}
+        <div className="jny-idea-wrap" data-beat="0" data-until="0" data-delay="420"><IdeaTicker /></div>
       </div>
       <div className="jny-entry-resolution" aria-hidden="true">
         <p className="jny-entry-statement"><span className="fin-line"><Words text="One idea." beat={1} /></span> <span className="fin-line"><Words text="Every detail." beat={1} start={110} /></span></p>

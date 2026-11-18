@@ -163,9 +163,12 @@ export default function ProjectStartingPoint() {
     const tracks = (["e", "x", "d"] as const).flatMap((prop) =>
       Array.from(el.querySelectorAll<HTMLElement>(`[data-${prop}]`)).map((node) => {
         const [a, b] = (node.dataset[prop] ?? "0,1").split(",").map(Number);
-        return { node, prop: `--${prop}`, seg: [a, b] as Seg, last: NaN };
+        return { node, prop: `--${prop}`, seg: [a, b] as Seg, last: NaN, intro: -1 };
       }),
     );
+    // The headline plays on time once the doors open: scroll only decides that it plays (Law 4),
+    // so it can never stop half-risen mid-scroll. Words in order, then the question mark.
+    tracks.filter((t) => t.prop === "--e" && head.contains(t.node)).forEach((t, i) => { t.intro = i; });
     const tiles = ORDER.map((k) => ({ k, node: body.querySelector<HTMLElement>(`.sp-tile[data-k="${k}"]`)!, shade: body.querySelector<HTMLElement>(`.sp-shade[data-k="${k}"]`)! }));
     const slides = Array.from(el.querySelectorAll<HTMLElement>(".sp-slide"));
     const dots = Array.from(el.querySelectorAll<HTMLButtonElement>(".sp-dots button"));
@@ -195,11 +198,14 @@ export default function ProjectStartingPoint() {
     };
     const scrollTarget = () => (statik ? 1 : clamp01((scrollY - start) / Math.max(1, end - start)));
 
-    let slideOn = -1, awake = false, lastP = 0;
+    let slideOn = -1, awake = false, lastP = 0, introT = 0, introOn = false;
+    const INTRO_LAG = 0.22, INTRO_STAGGER = 0.06, INTRO_END = INTRO_LAG + 4 * INTRO_STAGGER + 1.3;
     const caught = [0, 0, 0, 0];
     const paint = (p: number, time: number) => {
       for (const t of tracks) {
-        const v = ease(norm(p, t.seg));
+        const v = t.intro < 0 ? ease(norm(p, t.seg))
+          : reduce.matches ? (introOn ? 1 : 0)
+          : springCurve(clamp01((introT - INTRO_LAG - t.intro * INTRO_STAGGER) / 1.3));
         if (Math.abs(v - t.last) < 0.0005) continue;
         t.last = v;
         t.node.style.setProperty(t.prop, v.toFixed(4));
@@ -259,17 +265,22 @@ export default function ProjectStartingPoint() {
     const follow = createCameraProgress(scrollTarget(), 0.55);
     let p = -1, frameId = 0, last = 0, first = true;
     const tick = (now: number) => {
-      const dt = first ? 0 : Math.min(0.064, (now - last) / 1000);
+      const realDt = first ? 0 : Math.min(0.25, (now - last) / 1000);
+      const dt = Math.min(0.064, realDt);
       last = now;
       const goal = scrollTarget();
       let next = follow(goal, dt, first || reduce.matches);
       if (Math.abs(goal - next) < 0.0004) next = goal;
+      // The headline clock: forward once the scene has begun, backward (faster) when scrolled back.
+      introOn = goal > 0.012;
+      introT = Math.max(0, Math.min(INTRO_END, introT + (introOn ? 1 : -1.6) * realDt));
+      const introMoving = introOn ? introT < INTRO_END : introT > 0;
       const wake = scrollY > awakeFrom && scrollY < awakeTo && !document.hidden;
       if (wake !== awake) { awake = wake; el.toggleAttribute("data-awake", wake); }
       const ambient = awake && !reduce.matches && next > MORPH[1][0];
-      if (next !== p || ambient) { p = next; paint(p, now / 1000); }
+      if (next !== p || ambient || introMoving) { p = next; paint(p, now / 1000); }
       first = false;
-      frameId = next !== goal || ambient ? requestAnimationFrame(tick) : 0;
+      frameId = next !== goal || ambient || introMoving ? requestAnimationFrame(tick) : 0;
     };
     const run = () => { if (!frameId) { last = performance.now(); frameId = requestAnimationFrame(tick); } };
     const onScroll = () => run();

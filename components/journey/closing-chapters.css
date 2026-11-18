@@ -10,10 +10,10 @@
    ===================================================================== */
 
 .jny-chapters {
-  --k-ink: #132034;
-  --k-muted: #56667c;
+  --k-ink: var(--jny-chapter-ink);
+  --k-muted: var(--jny-chapter-muted);
   --k-dim: #8d9bb0;
-  --k-line: rgba(19, 32, 52, 0.1);
+  --k-line: var(--jny-chapter-line);
   --k-night: #0b1422;
   --k-gx: clamp(22px, 6vw, 112px);
   --k-spring: var(--ease-spring, cubic-bezier(0.34, 1.4, 0.64, 1));
@@ -58,7 +58,7 @@
    Four slabs in real CSS 3D: a twisting tower (a product build), one
    navy block (a focused launch), or an orbit (an ongoing partner).
    ===================================================================== */
-.jny-root .jny-chapters .jc-pricing { background: linear-gradient(180deg, #d2deea 0%, #e3ebf3 40%, #edf2f7 100%); }
+.jny-root .jny-chapters .jc-pricing { background: linear-gradient(180deg, var(--jny-chapter-sky) 0%, #e3ebf3 40%, var(--jny-chapter-mist) 100%); }
 .jp-layout {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -106,6 +106,8 @@
 /* the object */
 .jp-scene {
   position: relative;
+  display: grid;
+  place-items: center;
   height: clamp(420px, 66svh, 680px);
   perspective: 1600px;
   perspective-origin: 50% 30%;
@@ -201,7 +203,7 @@
 /* =====================================================================
    Before we start. A conversation.
    ===================================================================== */
-.jny-root .jny-chapters .jc-faq { background: linear-gradient(180deg, #edf2f7 0%, #eef3f8 100%); }
+.jny-root .jny-chapters .jc-faq { background: linear-gradient(180deg, var(--jny-chapter-mist) 0%, #eef3f8 100%); }
 .jq-layout {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
@@ -485,3 +487,5 @@
   .jk-shell { border-radius: 37px; }
   .jny-root .jny-chapters .jc-contact { padding-top: clamp(200px, 30svh, 300px); }
 }
+
+.jp-scene .sd-stage { width: min(100%, 62svh); }

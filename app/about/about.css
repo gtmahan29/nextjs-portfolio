@@ -1,0 +1,159 @@
+/* =========================================================================
+   About — "One person, every layer."
+   Paper, ink and one blue (the journey's palette); Yorkmade for display, Outfit for text.
+   Motion: --e / --x written per node by staged-motion on the shared spring; the CSS below turns
+   them into rises, pops, wipes and draws. --ease-spring is published by about-motion.tsx.
+   ========================================================================= */
+.about-page {
+  --ink: #0b1220;
+  --ink-2: #132034;
+  --muted: #586378;
+  --dim: #8d97ad;
+  --paper: #eef1f6;
+  --paper-2: #f7f8fb;
+  --accent: #2433e6;
+  --line: rgba(11, 18, 32, .08);
+  --display: var(--about-display), ui-sans-serif, system-ui, sans-serif;
+  --text: var(--about-text), ui-sans-serif, system-ui, sans-serif;
+  --pad: clamp(20px, 5vw, 88px);
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  color-scheme: light;
+  font-family: var(--text);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.about-page *, .about-page *::before, .about-page *::after { box-sizing: border-box; }
+.about-page a { color: inherit; text-decoration: none; }
+.about-page :focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 12px; }
+.ab-wrap { width: min(100% - var(--pad) * 2, 1320px); margin-inline: auto; }
+.ab-dim { color: var(--dim); }
+
+/* ---------- staging (the journey's vocabulary) ---------- */
+.about-page .jm-m { display: inline-block; overflow: hidden; vertical-align: top; padding: .28em .08em .24em; margin: -.28em -.08em -.24em; }
+.about-page .jm-m.jm-b { display: block; }
+.about-page .jm-in {
+  display: inline-block;
+  transform-origin: 0 100%;
+  transform:
+    translate3d(0, calc((1 - var(--e, 0)) * (1 - clamp(0, var(--x, 0), 1)) * 180% - var(--x, 0) * 180%), 0)
+    rotate(calc((1 - var(--e, 0)) * 4.5deg - var(--x, 0) * 3deg));
+}
+.about-page .jm-b > .jm-in { display: block; transform: translate3d(0, calc((1 - var(--e, 0)) * (1 - clamp(0, var(--x, 0), 1)) * 180% - var(--x, 0) * 180%), 0); }
+/* Anything that pops instead of rising: one scale, the overshoot deepened at the catch. */
+.ab-pop { display: inline-block; transform-origin: 50% 60%; transform: scale(max(0, calc(min(var(--e, 0), 1) + max(var(--e, 0) - 1, 0) * 2.5 - var(--x, 0)))); }
+.ab-draw { transform-origin: 0 50%; transform: scaleX(max(0, var(--e, 0))); }
+.ab-reveal { clip-path: inset(calc((1 - min(var(--e, 0), 1)) * 100%) 0 0 0 round 20px); }
+.ab-reveal img { transform: scale(calc(1.16 - .16 * min(var(--e, 0), 1))); transform-origin: 50% 100%; }
+
+/* ---------- buttons (button-in-button), shells (double bezel) ---------- */
+.ab-btn {
+  display: inline-flex; align-items: center; gap: 14px; padding: 7px 7px 7px 24px; border-radius: 999px;
+  font-size: 16px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap;
+  transition: scale .5s var(--ease-spring), background-color .5s var(--ease-spring), box-shadow .5s var(--ease-spring);
+}
+.ab-btn:active { scale: .97; }
+.ab-btn-sm { padding: 5px 5px 5px 18px; font-size: 14px; gap: 10px; }
+.about-page .ab-btn-dark { background: var(--ink); color: #f3f6fb; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 18px 34px -18px rgba(11, 18, 32, .7); }
+.about-page .ab-btn-light { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1px rgba(11, 18, 32, .06), 0 10px 26px -16px rgba(11, 18, 32, .35); }
+.about-page .ab-btn-glass { background: rgba(255, 255, 255, .08); color: #f3f6fb; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); }
+.ab-btn-ic {
+  display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255, 255, 255, .12); transition: transform .6s var(--ease-spring);
+}
+.ab-btn-sm .ab-btn-ic { width: 32px; height: 32px; }
+.ab-btn-light .ab-btn-ic { background: var(--paper); }
+.ab-btn-ic svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+@media (hover: hover) and (pointer: fine) {
+  .ab-btn:hover .ab-btn-ic, .ab-case:hover .ab-case-ic { transform: translate(3px, -2px) scale(1.06); }
+}
+
+.ab-shell { padding: 6px; border-radius: 28px; background: rgba(255, 255, 255, .45); box-shadow: inset 0 0 0 1px rgba(11, 18, 32, .05); }
+.ab-core { position: relative; border-radius: 22px; background: #fff; box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(11, 18, 32, .04), 0 24px 48px -32px rgba(19, 32, 80, .35); }
+
+/* ---------- floating island nav ---------- */
+.ab-nav-wrap { position: fixed; top: 18px; left: 0; right: 0; z-index: 30; display: flex; justify-content: center; pointer-events: none; padding-inline: 16px; }
+.ab-nav {
+  pointer-events: auto; display: flex; align-items: center; gap: clamp(14px, 3vw, 40px); padding: 6px 6px 6px 22px; border-radius: 999px;
+  background: rgba(247, 248, 251, .66); backdrop-filter: blur(18px) saturate(170%); -webkit-backdrop-filter: blur(18px) saturate(170%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7), 0 1px 0 rgba(255, 255, 255, .8), 0 14px 40px -24px rgba(11, 18, 32, .45);
+}
+.ab-brand { display: block; width: 104px; color: var(--ink); }
+.ab-brand svg { display: block; width: 100%; height: auto; }
+.ab-links { display: flex; gap: clamp(14px, 2.2vw, 30px); font-size: 14px; font-weight: 500; color: var(--muted); }
+.ab-links a { transition: color .4s var(--ease-spring); }
+.ab-links a:hover { color: var(--ink); }
+
+/* ---------- statement + terms ---------- */
+.ab-manifesto { padding: clamp(110px, 16vh, 180px) 0 clamp(90px, 13vh, 150px); background: var(--paper); }
+.ab-statement { max-width: 22em; margin: 0; font-size: clamp(32px, 4.2vw, 66px); font-weight: 600; line-height: 1.08; letter-spacing: -.035em; text-wrap: balance; }
+.ab-terms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(36px, 5vh, 56px) clamp(32px, 6vw, 110px); max-width: 1080px; margin: clamp(64px, 10vh, 112px) 0 0; }
+.ab-terms dt { font-size: clamp(19px, 1.6vw, 23px); font-weight: 600; line-height: 1.25; letter-spacing: -.02em; }
+.ab-terms dd { max-width: 36em; margin: 10px 0 0; font-size: 16px; line-height: 1.6; color: var(--muted); }
+
+/* ---------- path ---------- */
+.ab-path { padding: clamp(110px, 16vh, 180px) 0; background: #e7ebf3; }
+.ab-h2 { margin: 0; font-family: var(--display); font-size: clamp(42px, 5.4vw, 92px); font-weight: 700; line-height: .95; letter-spacing: -.01em; }
+.ab-steps-wrap { position: relative; margin-top: clamp(56px, 9vh, 96px); }
+.ab-steps-line { position: absolute; left: 0; right: 0; top: 9px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, rgba(11, 18, 32, .12), var(--accent)); }
+.ab-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; margin: 0; padding: 0; list-style: none; }
+.ab-step { position: relative; padding-top: 40px; }
+.ab-step-dot { position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2px rgba(11, 18, 32, .18); }
+.ab-step-now .ab-step-dot { background: var(--accent); box-shadow: 0 0 0 6px rgba(36, 51, 230, .16); }
+.ab-step-place { margin: 0; font-size: 13px; font-weight: 600; color: var(--accent); }
+.ab-step-place b { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ab-edu { display: flex; flex-wrap: wrap; gap: 14px 48px; margin: clamp(56px, 8vh, 88px) 0 0; padding: 0; list-style: none; font-size: 15px; color: var(--muted); }
+.ab-edu b { margin-right: 10px; font-weight: 600; color: var(--ink); }
+.ab-step h3 { margin: 10px 0 0; font-size: 20px; font-weight: 600; line-height: 1.2; letter-spacing: -.02em; }
+.ab-step-copy { margin: 10px 0 0; font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+
+/* ---------- work ---------- */
+.ab-work { padding: clamp(110px, 16vh, 180px) 0; background: var(--paper-2); }
+.ab-cases { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 32px); margin-top: clamp(48px, 7vh, 80px); }
+.ab-case { display: block; }
+.ab-case-media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; }
+.ab-case-media img { object-fit: cover; }
+.ab-case-meta { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 8px 0; }
+.ab-case-kind { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.ab-case h3 { margin: 8px 0 0; font-size: clamp(22px, 2vw, 30px); font-weight: 600; letter-spacing: -.03em; }
+.ab-case-meta p:last-child { margin: 6px 0 0; color: var(--muted); }
+.ab-case-ic { margin-top: 6px; background: var(--ink); color: #f3f6fb; }
+
+/* ---------- contact ---------- */
+.ab-contact { position: relative; padding: clamp(120px, 18vh, 200px) 0 36px; background: radial-gradient(70% 60% at 50% 0%, #1c2a4f 0%, var(--ink) 70%); color: #f3f6fb; overflow: hidden; }
+.ab-contact-inner { display: grid; justify-items: center; text-align: center; gap: 28px; }
+.ab-contact-h { margin: 0; font-family: var(--display); font-size: clamp(56px, 9vw, 160px); font-weight: 700; line-height: .9; letter-spacing: -.01em; }
+.ab-contact .ab-dim { color: #5d6b8f; }
+.about-page .ab-mail { display: inline-flex; align-items: center; gap: 16px; padding: 8px 8px 8px 30px; border-radius: 999px; background: #f3f6fb; color: var(--ink); font-size: clamp(17px, 1.6vw, 22px); font-weight: 600; letter-spacing: -.01em; }
+.ab-mail .ab-btn-ic { background: var(--ink); color: #f3f6fb; width: 46px; height: 46px; }
+.ab-mail:active { scale: .98; }
+.ab-foot { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: clamp(100px, 16vh, 180px); padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, .08); font-size: 13px; color: #8a96b4; }
+.ab-foot svg { width: 110px; height: auto; color: #f3f6fb; }
+
+/* ---------- tablets and phones ---------- */
+@media (max-width: 1100px) {
+  .ab-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
+  .ab-steps-line { display: none; }
+}
+@media (max-width: 900px) {
+  .ab-links { display: none; }
+  .ab-nav { gap: 14px; }
+  .ab-terms, .ab-cases { grid-template-columns: minmax(0, 1fr); }
+  .ab-steps { grid-template-columns: minmax(0, 1fr); row-gap: 28px; }
+  .ab-step { padding: 0 0 0 40px; }
+  .ab-foot { flex-direction: column; text-align: center; }
+}
+@media (max-width: 420px) {
+  .ab-brand { width: 88px; }
+  .ab-btn-sm { font-size: 13px; }
+}
+
+/* ---------- reduced motion and transparency ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .about-page *, .about-page *::before, .about-page *::after { animation: none !important; transition: none !important; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .ab-nav { background: #f7f8fb; backdrop-filter: none; -webkit-backdrop-filter: none; }
+}

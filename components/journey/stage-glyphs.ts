@@ -30,6 +30,8 @@ const SHAPES: ((a: number) => number)[] = [
 ];
 
 export const GLYPH_COUNT = SHAPES.length;
+/** Radius of glyph i at angle a (unit scale): shared with the page loader's morph. */
+export const glyphRadius = (i: number, a: number) => SHAPES[i % SHAPES.length](a);
 
 /** SVG path for glyph i at morph m (0 = the square face, 1 = the glyph; >1 overshoots). */
 export function glyphPath(i: number, m: number) {

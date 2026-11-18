@@ -85,12 +85,12 @@ export function createMeshyPhaseDecor(sites: DistrictSite[]) {
       B(-24,.025,-6,6,.045,13,4);
     }else if(phase===4){
       board(-14,18.5,6,"metrics",-Math.PI/2);
-      for(let i=0;i<3;i++)rack(-18,-12+i*3.2,4.4,-Math.PI/2);
-      B(-21.5,.025,18.5,11,.045,12,6);B(-20,.025,-9,7,.045,12,3);
-      for(let i=0;i<4;i++)B(-24,.10,-13+i*2,.55,.20,.9,2);
+      for(let i=0;i<3;i++)rack(16,-27+i*3.2,4.4,-Math.PI/2);
+      B(-21.5,.025,18.5,11,.045,12,6);B(14,.025,-24,7,.045,12,3);
+      for(let i=0;i<4;i++)B(10,.10,-28+i*2,.55,.20,.9,2);
     }else{
       table(-7.5,24,1.0,.95);table(-18,2,.75,1.55);
-      board(-24,-8,3.8,"metrics",Math.PI/2);plant(-13,26);plant(-26,-4);plant(-14,22);
+      board(10,-20,3.8,"metrics",Math.PI/2);plant(-13,26);plant(8,-16);plant(-14,22);
       B(-7.5,.025,24,8,.045,6,6);B(-18,.025,2,8,.045,8,6);
     }
     set.updateMatrixWorld(true);

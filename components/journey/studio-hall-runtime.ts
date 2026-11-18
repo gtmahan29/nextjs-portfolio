@@ -36,7 +36,9 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
    let screen:THREE.Mesh|undefined;
    device.traverse(o=>{if(o instanceof THREE.Mesh&&o.userData.showroomScreen)screen=o;});
    if(!screen)throw new Error('Device screen missing');screens.push(screen);
-   (screen.material as THREE.MeshBasicMaterial).map=createProductPreview(i,quality.textureSize);
+   const display=screen.material as THREE.MeshBasicMaterial;
+   if(i===0)display.color.set('#101521');
+   else display.map=createProductPreview(i,quality.textureSize);
    device.rotation.y=i===1?-.12:-.1;
    const size=new THREE.Box3().setFromObject(device).getSize(new THREE.Vector3());
    const scale=(i===1?5.25:4.7)/size.y;device.scale.setScalar(scale);baseScales.push(scale);
@@ -46,7 +48,8 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
    assemblies[i].add(device);device.visible=true;
   });
   renderer.localClippingEnabled=true;turntable.updateMatrixWorld(true);
-  const transfer=!reduced?createLaptopTransfer(hall,baked.devices[0],screens[0]):undefined;scope.defer(()=>transfer?.dispose());
+  const transfer=createLaptopTransfer(hall,baked.devices[0],screens[0]);scope.defer(transfer.dispose);
+  const handoffProgress=()=>reduced?1:transfer.progress();
   const panels=Array.from(hall.querySelectorAll<HTMLElement>('[data-service]'));
   // Copy is scroll-triggered, not scroll-scrubbed: scroll decides which service is on stage,
   // then every element runs the shared spring in real time, so each move always overshoots
@@ -62,8 +65,8 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
   // second time-based scrub, so the story eases to rest the moment input stops.
   const follow=createCameraProgress(0,.5);
   // Layout is read here only (resize/refresh), never from scroll or render frames.
-  const measure=()=>{top=hall.getBoundingClientRect().top+scrollY;hallHeight=hall.offsetHeight;span=Math.max(1,hallHeight-innerHeight);transfer?.measure();target=clamp((scrollY-top)/span,0,1);};
-  measure();position=follow(target,0,true);handoffPosition=transfer?.progress()??1;
+  const measure=()=>{top=hall.getBoundingClientRect().top+scrollY;hallHeight=hall.offsetHeight;span=Math.max(1,hallHeight-innerHeight);transfer.measure();target=clamp((scrollY-top)/span,0,1);};
+  measure();position=follow(target,0,true);handoffPosition=handoffProgress();
   const dataset=(key:string,value:string)=>{if(hall.dataset[key]!==value)hall.dataset[key]=value;};
 
   const request=()=>{if(prepared&&!frame&&!disposed&&visible&&!document.hidden&&!isCaseStudyOpen()){last=performance.now();frame=requestAnimationFrame(tick);}};
@@ -138,7 +141,7 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
   const tick=(now:number)=>{
    frame=0;if(disposed||!visible||document.hidden||isCaseStudyOpen())return;
    const dt=Math.min(.05,(now-last)/1000),springDt=Math.min(.25,(now-last)/1000);last=now;
-   const rawHandoff=transfer?.progress()??1;
+   const rawHandoff=handoffProgress();
    const oldHandoff=handoffPosition,oldPosition=position;
    // Lenis already smooths the source scroll. A second, asymptotic handoff
    // used to hide the service timeline while that timeline kept advancing.
@@ -160,8 +163,7 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
    world.update(camera);
    if(mobile){camera.position.y=7.2;camera.lookAt(1,3.286,world.podium.z);}
    if(handoffPosition<1){assemblies[0].scale.setScalar(1);assemblies[0].rotation.set(0,0,0);baked.devices.forEach((device,i)=>{device.visible=i===0;device.scale.setScalar(baseScales[i]);device.position.set(homeX[i],homeY[i],0);device.rotation.set(0,i===1?-.12:-.1,0);});}
-   const handoff=transfer?.update(camera,handoffPosition,width,height);
-   if(!handoff?.active){
+   if(handoffPosition===0||handoffPosition===1){
     baked.devices.forEach((device,i)=>{
      const assembly=assemblies[i];
      // The platform grows from a point, overshoots and is caught at full size while it spins in;
@@ -177,18 +179,20 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
      device.rotation.set(0,i===1?-.12:-.1,0);
     });
    }
+   const handoff=transfer.update(camera,handoffPosition,width,height,!reduced&&devices[0].value>.002);
    renderer.render(world.scene,camera);
    if(p>=.99&&handoffPosition>=.999)finalHold+=dt;else finalHold=0;
    // Attribute writes restyle the whole hall subtree; only write real changes.
    dataset('servicesComplete',String(reduced||finalHold>=.45));
    if(!canvas.dataset.sceneReady)canvas.dataset.sceneReady='true';dataset('sceneRendered','true');
    const moving=animating||(p>=.99&&finalHold<.45)||Math.abs(target-position)>.00001||Math.abs(rawHandoff-handoffPosition)>.00001||Math.abs(oldPosition-position)>.000001||Math.abs(oldHandoff-handoffPosition)>.000001;
-   if(moving||handoff?.changed)frame=requestAnimationFrame(tick);
+   if(moving||handoff.changed)frame=requestAnimationFrame(tick);
   }
   // Returning after a jump (anchor, reload) must not replay the story from a stale pose.
-  const show=(next:boolean)=>{if(next&&!visible)position=follow(target,0,true);visible=next;};
-  const scroll=()=>{target=clamp((scrollY-top)/span,0,1);const h=transfer?.progress()??0;show(scrollY+innerHeight>top&&scrollY<top+hallHeight||h>0&&h<1);request();};
-  const observer=new IntersectionObserver(([entry])=>{show(entry.isIntersecting||(transfer?.progress()??0)>0&&(transfer?.progress()??0)<1);if(visible)request();},{rootMargin:'0px'});observer.observe(hall);
+  const show=(next:boolean)=>{if(next&&!visible)position=follow(target,0,true);if(!next&&visible)transfer.reset();visible=next;};
+  const inHandoff=()=>{const p=handoffProgress();return p>0&&p<1;};
+  const scroll=()=>{target=clamp((scrollY-top)/span,0,1);show(scrollY+innerHeight>top&&scrollY<top+hallHeight||inHandoff());request();};
+  const observer=new IntersectionObserver(([entry])=>{show(entry.isIntersecting||inHandoff());if(visible)request();},{rootMargin:'0px'});observer.observe(hall);
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(canvas);resizeObserver.observe(hall);
   window.addEventListener('scroll',scroll,{passive:true});window.addEventListener('resize',resize);
   document.addEventListener('visibilitychange',request);window.addEventListener(CASE_VISIBILITY_EVENT,request);

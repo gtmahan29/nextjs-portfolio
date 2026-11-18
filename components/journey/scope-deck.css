@@ -1,0 +1,88 @@
+/* The scope deck: three cards, each acting out what that kind of project gives you (scope-deck.tsx). */
+.sd-stage {
+  --sd-ink: #132034;
+  --sd-accent: #2433e6;
+  position: relative;
+  width: min(100%, 64svh);
+  aspect-ratio: 1;
+  perspective: 1800px;
+  perspective-origin: 50% 35%;
+}
+.sd-deck { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }
+.sd-shadow {
+  position: absolute; left: 22%; right: 22%; top: 88%; height: 9%; margin-top: -4.5%;
+  border-radius: 50%; background: radial-gradient(closest-side, rgba(18, 26, 110, .24), rgba(18, 26, 110, 0));
+  transform: scale(0); will-change: transform;
+}
+.sd-card {
+  position: absolute; left: 50%; top: 50%; width: 62%; aspect-ratio: 300 / 380; margin: -39.3% 0 0 -31%;
+  border-radius: 7%/5.5%; overflow: hidden;
+  background: linear-gradient(165deg, #ffffff 0%, #fbfcfe 55%, #f3f5fa 100%);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 0 0 1px rgba(11, 18, 32, .05),
+    0 2px 4px rgba(24, 32, 120, .05),
+    0 18px 34px -14px rgba(24, 32, 120, .26),
+    0 40px 70px -30px rgba(24, 32, 120, .3);
+  transform: scale(0); will-change: transform; backface-visibility: hidden;
+}
+.sd-svg { display: block; width: 100%; height: 100%; font-family: var(--font-page), ui-sans-serif, system-ui, sans-serif; }
+.sd-h { font-size: 14px; font-weight: 600; letter-spacing: -.01em; fill: var(--sd-ink); }
+.sd-m { font-size: 11px; font-weight: 500; letter-spacing: .02em; fill: #8b93a7; }
+.sd-strong { font-weight: 600; }
+
+/* Idea */
+.sd-sketch path { fill: none; stroke: #a3abbf; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.sd-sketch path:first-child { stroke: #8790a6; stroke-width: 2.4; }
+.sd-pen { fill: var(--sd-accent); }
+.sd-pen-halo { fill: rgba(36, 51, 230, .16); }
+.sd-btn { fill: var(--sd-accent); }
+.sd-btn-t { font-size: 10px; font-weight: 600; fill: #fff; }
+.sd-ripple { fill: none; stroke: rgba(36, 51, 230, .28); stroke-width: 0; }
+.sd-cursor { fill: var(--sd-ink); stroke: #fff; stroke-width: 1.4; stroke-linejoin: round; }
+.sd-chip { fill: #eef0ff; }
+.sd-chip-dot { fill: var(--sd-accent); }
+.sd-chip-tick, .sd-box-tick { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sd-chip-t { font-size: 11.5px; font-weight: 600; fill: #1c27c4; }
+
+/* Launch */
+.sd-tag { fill: #eef0ff; }
+.sd-tag-t { font-size: 10.5px; font-weight: 600; fill: #1c27c4; }
+.sd-row { fill: #f3f5fa; stroke: rgba(11, 18, 32, .04); }
+.sd-row-later { fill: #f7f8fb; }
+.sd-row-t { font-size: 12px; font-weight: 500; fill: var(--sd-ink); }
+.sd-box { fill: #fff; stroke: #c9cfdc; stroke-width: 1.6; }
+.sd-box-on { fill: var(--sd-accent); }
+.sd-later-t { font-size: 10px; font-weight: 600; fill: #8b93a7; }
+.sd-dash { stroke: #c9cfdc; stroke-width: 1.4; stroke-dasharray: 4 5; }
+.sd-track { fill: #e3e7f0; }
+.sd-fill { fill: var(--sd-accent); }
+.sd-knob { fill: #fff; filter: drop-shadow(0 2px 3px rgba(11, 18, 32, .25)); }
+.sd-ring { fill: none; stroke: rgba(36, 51, 230, .3); stroke-width: 0; }
+
+/* Live */
+.sd-live { fill: #10b981; }
+.sd-rail { stroke: #e1e5ee; stroke-width: 6; stroke-linecap: round; }
+.sd-node { fill: #fff; stroke: #c9cfdc; stroke-width: 2; }
+.sd-bar-bg { fill: #eef0f5; }
+.sd-bar { fill: #b9c0f8; }
+.sd-dot { fill: var(--sd-accent); }
+.sd-stuck { fill: rgba(245, 158, 11, .16); stroke: #f59e0b; stroke-width: 2; }
+.sd-drop { fill: #fff4e0; }
+.sd-drop-t { font-size: 11px; font-weight: 600; fill: #b45309; }
+.sd-fix { fill: var(--sd-accent); }
+.sd-fix-t { font-size: 11px; font-weight: 600; fill: #fff; }
+.sd-num { fill: #fff; stroke: #c9cfdc; stroke-width: 1.4; }
+.sd-num-t { font-size: 11px; font-weight: 600; fill: #5a6478; }
+
+@media (max-width: 900px) { .sd-stage { width: min(100%, 44svh); } }
+
+/* Product build: the real interface, the live chip, the milestones */
+.sd-build-img { fill: #c7cdfb; }
+.sd-build-line { fill: var(--sd-ink); }
+.sd-build-soft { fill: #8b93a7; }
+.sd-live-chip { fill: #e7f8f1; }
+.sd-live-t { font-size: 9px; font-weight: 600; fill: #047857; }
+.sd-step-rail { stroke: #e1e5ee; stroke-width: 4; stroke-linecap: round; }
+.sd-step-fill { fill: var(--sd-accent); }
+.sd-step-t { font-size: 10px; font-weight: 500; fill: #5a6478; }

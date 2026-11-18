@@ -7,19 +7,23 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { createDotTrail } from "./dot-trail";
+import { createRouteRibbon } from "./route-ribbon";
+import { SPARK_IDEA_Y } from "./spark-studio";
 import { CAMERA_ELEVATION, CAMERA_YAW, createCameraProgress, createTravelTrack, scrollToStory, storyToScroll } from "./camera-motion";
 import { stretchJourneyZ } from "./world-layout";
 import { buildStationDistrict, buildInterstationDistricts, insideDistrict, type DistrictFootprint } from "./district-buildings";
-import { mountPhaseDioramas } from "./imported-models/phase-dioramas";
+import { LAUNCH_ENTRY, launchBeatAt } from "./launch-story";
 import { mountMeshyResidents } from "./meshy-residents";
 import {smoothScrollTo} from "@/components/smooth-scroll";
 import { createStagedMotion, BEFORE, AFTER } from "./staged-motion";
 import { createSpring, SPRING_PEAK } from "./motion-curve";
 import { play } from "./sfx";
 import { glyphPath } from "./stage-glyphs";
+import { createCapsule } from "./spring-ticker";
 import { createEntryPaper } from "./spark-material";
 import { ENTRY_CENTER, ENTRY_REVEAL, ENTRY_SPACE } from "./spark-cube";
 import { createFinalCube } from "./final-cube";
+import { createJourneyFloor } from "./journey-floor";
 import { createSceneProfiler } from "./scene-profiler";
 
 import type {SceneContext} from "./use-scene-runtime";
@@ -69,6 +73,9 @@ const ST_INDEX = [0, 4, 10, 18, 22, 26];
 const CAMERA_DISTANCE = 142;
 const FINAL_FRAMING = createTravelTrack([[0, 0], [.74, 0], [.85, 1], [1, 1]]);
 const FIFTH_FRAMING = createTravelTrack([[0, 0], [.60, 0], [.70, 1], [1, 1]]);
+const TEST_CELL_FRAMING = createTravelTrack([[0, 0], [.51, 0], [.56, 1], [.60, 1], [.66, 0], [1, 0]]);
+const CAPACITY_FRAMING = createTravelTrack([[0, 0], [.65, 0], [.70, 1], [.74, 1], [.80, 0], [1, 0]]);
+const LAUNCH_FRAMING = createTravelTrack([[0, 0], [.78, 0], [.85, 1], [.89, 1], [.945, 0], [1, 0]]);
 
 export async function mountScene({canvas,section,signal,quality}:SceneContext) {
   const scope=new SceneScope(signal);
@@ -77,7 +84,7 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     const header = document.querySelector<HTMLElement>(".jny-header");
     const showroomStage=document.querySelector('.lumen-stage');
     const journeyStage=section.querySelector<HTMLElement>('.jny-stage');
-    const screenHidden=()=>section.dataset.screenOccluded==='true';
+    const stageVisible=()=>visible||section.dataset.screenProjected==='true';
     const lowPower = quality.tier === "low";
     const adaptive = new AdaptiveSceneQuality(quality);
 
@@ -90,7 +97,6 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     }
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const mobile0 = window.innerWidth < 860;
     renderer.setPixelRatio(scenePixelRatio(quality,canvas.clientWidth,canvas.clientHeight,devicePixelRatio));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -100,10 +106,11 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     renderer.toneMappingExposure = 1.0;
 
     const BG = new THREE.Color("#cfdce8");
+    const PAPER = new THREE.Color("#ffffff"); // matches the showcase behind the doors
     const scene = new THREE.Scene();
     let initialized=false;
     scope.defer(()=>{if(!initialized){disposeSceneResources(scene);renderer.dispose();}});
-    scene.background = BG;
+    scene.background = BG.clone();
     const environmentGenerator = new THREE.PMREMGenerator(renderer);
     const studio = new RoomEnvironment();
     const environment = environmentGenerator.fromScene(studio, .04);
@@ -196,7 +203,10 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     ground.receiveShadow = true;
     scene.add(ground);
 
-    const tableTop = new THREE.Mesh(new RoundedBoxGeometry(940, 1.6, 620, 2, 0.65), std("#e6eef6", { roughness: 0.32, metalness: 0.08 }));
+    // The tabletop the route sits on, drawn like a site model (contours, drafted grid, walkway, plazas).
+    const journeyFloor = createJourneyFloor("#e6eef6", ROUTE, ST_INDEX.map((ri, i) => ({ x: ROUTE[ri][0], z: ROUTE[ri][1], color: STATIONS[i].color })));
+    scope.defer(() => journeyFloor.dispose());
+    const tableTop = new THREE.Mesh(new RoundedBoxGeometry(940, 1.6, 620, 2, 0.65), journeyFloor.material);
     tableTop.position.set(330, -0.8, 185);
     tableTop.receiveShadow = true;
     scene.add(tableTop);
@@ -340,56 +350,35 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       return new THREE.CanvasTexture(c);
     })();
 
-    const trailUniforms = {
-      uH: { value: 0 },
-      uO: { value: 1 },
-      uLen: { value: L },
-    };
-    const coreMat = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      uniforms: trailUniforms,
-      vertexShader: `varying vec2 vUv; varying float vF; void main(){ vUv=uv; vec4 mv=modelViewMatrix*vec4(position,1.); vec3 n=normalize(normalMatrix*normal); vF=abs(dot(n,normalize(-mv.xyz))); gl_Position=projectionMatrix*mv; }`,
-      fragmentShader: `uniform float uH,uO,uLen; varying vec2 vUv; varying float vF; void main(){
-        float b=(uH-vUv.x)*uLen; if(b<0.) discard;
-        float tip=smoothstep(0.,.12,b); float hot=exp(-b/6.);
-        vec3 col=mix(vec3(.14,.63,.87),vec3(.87,.99,1.),hot*.85+.1*vF);
-        float a=tip*(.78+.22*vF)*uO;
-        gl_FragColor=vec4(col,a); }`,
-    });
-    const haloMat = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      uniforms: trailUniforms,
-      vertexShader: coreMat.vertexShader,
-      fragmentShader: `uniform float uH,uO,uLen; varying vec2 vUv; varying float vF; void main(){
-        float b=(uH-vUv.x)*uLen; if(b<0.) discard;
-        float a=smoothstep(0.,.8,b)*(exp(-b/9.)*.35+.035)*pow(vF,2.)*uO;
-        gl_FragColor=vec4(vec3(.42,.85,1.)*a,1.); }`,
-    });
-    const coreGeo = new THREE.TubeGeometry(curve, lowPower ? 900 : 1800, 0.24, lowPower ? 6 : 8, false);
-    coreGeo.translate(0, 0.32, 0);
-    const haloGeo = new THREE.TubeGeometry(curve, lowPower ? 900 : 1800, 0.64, lowPower ? 6 : 8, false);
-    haloGeo.translate(0, 0.32, 0);
-    const trailCore = new THREE.Mesh(coreGeo, coreMat);
-    const trailHalo = new THREE.Mesh(haloGeo, haloMat);
-    trailCore.renderOrder = 5;
-    trailHalo.renderOrder = 6;
-    trailCore.frustumCulled = false;
-    trailHalo.frustumCulled = false;
-    scene.add(trailCore, trailHalo);
+    // The route: a ribbon of light inlaid in the walkway, coloured by the station ahead.
+    const route = createRouteRibbon(curve, L, STOP.map(v => v / L), STATIONS.map(st => st.color), lowPower ? 900 : 1800);
+    scene.add(route.mesh);
+    scope.defer(() => route.dispose());
+    // The head follows the camera's progress through a short smoothing, so the light glides.
+    let headU = -1;
+    const WHITE = new THREE.Color(1, 1, 1), headAt = new THREE.Vector3();
 
-    // A small spherical continuation of the tube, rather than a camera-facing disc.
-    const head = new THREE.Mesh(new THREE.SphereGeometry(.245,12,8), new THREE.MeshBasicMaterial({color:"#e6fbff"}));
-    const headGlow = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:"#aee8ff",transparent:true,opacity:.4,depthWrite:false,blending:THREE.AdditiveBlending}));
-    headGlow.scale.setScalar(.85); head.add(headGlow);
-    head.renderOrder = 7;
+    // The head of the route is the idea itself: a small gold cube floating just above the road.
+    // It moves with inertia: its tumble builds with speed (capped, unhurried), it leans into
+    // acceleration and banks into turns, and at rest it eases onto a face and breathes. Arriving
+    // at a station the platform takes it in; leaving, it rises out again.
+    const HEAD_SIZE = 1.35;
+    const head = new THREE.Group();
+    const headBody = new THREE.Mesh(new RoundedBoxGeometry(HEAD_SIZE, HEAD_SIZE, HEAD_SIZE, 3, .14),
+      new THREE.MeshPhysicalMaterial({ color: "#f3c46a", metalness: .45, roughness: .2, clearcoat: 1, clearcoatRoughness: .08, emissive: "#f59e0b", emissiveIntensity: .32, envMapIntensity: 1.2 }));
+    headBody.castShadow = true;
+    const headEdges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(HEAD_SIZE * .985, HEAD_SIZE * .985, HEAD_SIZE * .985)),
+      new THREE.LineBasicMaterial({ color: "#fff3cf", transparent: true, opacity: .85 }));
+    headBody.add(headEdges);
+    head.add(headBody);
     scene.add(head);
+    const headPresent = createSpring(1), headLean = createSpring(0), headBank = createSpring(0);
+    const headTangent = new THREE.Vector3(), headYaw = new THREE.Quaternion(), headRoll = new THREE.Quaternion(), headTilt = new THREE.Quaternion(), headTumble = new THREE.Quaternion();
+    const Z_AXIS = new THREE.Vector3(0, 0, 1), X_AXIS = new THREE.Vector3(1, 0, 0);
+    let lastHeadU = -1, headV = 0, headAcc = 0, headSpin = 0, headYawPrev: number | null = null;
     const headLight = new THREE.PointLight(0xbfe6ff, 0, 36, 1.6);
     scene.add(headLight);
 
-    const routeDots = createDotTrail(scene, 9, 1.4);
     const pointerDots = createDotTrail(scene, 12, 1.8);
     const pointerRay = new THREE.Raycaster();
     const pointerNdc = new THREE.Vector2();
@@ -429,6 +418,7 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       extras: Extras;
     };
     const stations: StState[] = [];
+    const floorActs = STATIONS.map(() => 0);
     const districtFootprints: DistrictFootprint[] = [];
 
     for (const [i,st] of Array.from(STATIONS.entries())) {
@@ -445,10 +435,9 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       const winMat = new THREE.MeshStandardMaterial({ color: "#eaf1fa", emissive: accent, emissiveIntensity: 0, roughness: 0.3 });
       const ringMat = new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.3, roughness: 0.4 });
 
-      const extras: Extras = i < 4 ? buildStation(st.building, {
+      const extras = buildStation(st.building, {
         B, scene, heading, lx, px, pz, accent, accentHex: st.color, frameMat, winMat, stationData: st,
-      }) : { cardGroup: null, cardBaseY: 0, beaconLight: null, crates: [], spins: [], sway: null,
-        floats: [], inDoorGlow: null, outDoorGlow: null, pulseMeshes: [] };
+      });
       // Emissive station details provide accent color without extra global light loops.
       extras.beaconLight?.removeFromParent();
       extras.beaconLight = null;
@@ -461,8 +450,7 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       );
       contact.rotation.x = -Math.PI / 2;
       contact.position.set(px, 0.005, pz);
-      if (i < 4) scene.add(contact);
-      else { contact.geometry.dispose(); (contact.material as THREE.Material).dispose(); }
+      scene.add(contact);
 
       const lamp = new THREE.PointLight(accent, 0, 42, 1.8);
       lamp.position.set(px, 3.5, pz);
@@ -486,19 +474,19 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     }
 
     districtFootprints.push(...buildInterstationDistricts(B, ROUTE, ST_INDEX));
-    const phaseDioramas = mountPhaseDioramas(scene, [
-      { idx: 4, px: stations[4].px, pz: stations[4].pz },
-      { idx: 5, px: stations[5].px, pz: stations[5].pz },
-    ], mobile0 ? 1.38 : 1, model => queueSceneSetup(signal,async()=>{
-      await warmScene(renderer,model,camera,scope,signal,scene);
-    }),{saveData:quality.tier==="low",onReady:()=>syncRendering()});
+    const saveData = quality.tier === "low";
+    const prepareStation = (model: THREE.Group) =>
+      queueSceneSetup(signal, () => warmScene(renderer, model, camera, scope, signal, scene));
+    const capacityField = stations[4].extras.capacityField;
+    if (capacityField) scope.defer(() => capacityField.dispose());
+    const launchWorld = stations[5].extras.launchWorld;
+    if (launchWorld) scope.defer(() => launchWorld.dispose());
 
-    scope.defer(()=>phaseDioramas.dispose());
     const meshyResidents = mountMeshyResidents(scene,
       stations.map(st => ({ x: st.px, z: st.pz, heading: st.heading })), ROUTE, ST_INDEX, {
       onReady: () => syncRendering(),
       anisotropy: renderer.capabilities.getMaxAnisotropy(),
-      prepare: model => queueSceneSetup(signal, () => warmScene(renderer, model, camera, scope, signal, scene)),
+      prepare: prepareStation,
     });
     scope.defer(()=>meshyResidents.dispose());
     await yieldToMain(signal);
@@ -581,7 +569,16 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     scope.defer(() => finale.dispose());
     const sparkArtifact = stations[0].extras.sparkRig;
     if (sparkArtifact) scope.defer(() => sparkArtifact.dispose());
-    await Promise.all([finale.ready, sparkArtifact?.ready]);
+    const sparkStudio = stations[0].extras.sparkStudio;
+    if (sparkStudio) scope.defer(() => sparkStudio.dispose());
+    const shapeStudio = stations[1].extras.shapeStudio;
+    if (shapeStudio) scope.defer(() => shapeStudio.dispose());
+    const systemFoundry = stations[2].extras.systemFoundry;
+    if (systemFoundry) scope.defer(() => systemFoundry.dispose());
+    // Station 04 loads in the background: it is far from where the journey starts.
+    const provingGround = stations[3].extras.provingGround;
+    if (provingGround) scope.defer(() => provingGround.dispose());
+    await Promise.all([finale.ready, sparkArtifact?.ready, sparkStudio?.ready, shapeStudio?.ready, systemFoundry?.ready]);
     if (signal.aborted) throw new DOMException("Scene initialization aborted", "AbortError");
     finale.root.position.copy(padPos);
     scene.add(finale.root);
@@ -629,6 +626,8 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       const h = 52 + rnd() * 74;
       const m = new THREE.Mesh(mtnGeo, std(mtnTones[k % 4], { flatShading: true, roughness: 1 }));
       m.position.set(330 + Math.cos(a) * r, GROUND_Y, 185 + Math.sin(a) * r);
+      // Keep this background mountain clear of the camera's approach to the finale.
+      if (k === 1) m.position.x += 180;
       m.scale.set(42 + rnd() * 38, h, 42 + rnd() * 38);
       m.rotation.y = rnd() * Math.PI;
       scene.add(m);
@@ -771,11 +770,24 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       i ? (FOCUS[i - 1] + f) / 2 : 0.05,
       i < FOCUS.length - 1 ? (f + FOCUS[i + 1]) / 2 : 1.01,
     ]);
+    const jumpToProgress = (progress: number) =>
+      smoothScrollTo(sectionTop + entrySpan + scrollSpan * storyToScroll(progress));
     const jump = (i: number) => (ev: Event) => {
       ev.preventDefault();
-      smoothScrollTo(sectionTop + entrySpan + scrollSpan * storyToScroll(FOCUS[i]));
+      jumpToProgress(i === 5 ? LAUNCH_ENTRY : FOCUS[i]);
     };
     const jumpers = stepEls.map((_, i) => jump(i));
+    // The station dock: one navy capsule travels to the active station and takes its shape.
+    const railCore = stepsEl?.querySelector<HTMLElement>(".jny-steps-core") ?? null;
+    const railCapsule = railCore?.querySelector<HTMLElement>(".jny-dock-capsule");
+    const dock = railCore && railCapsule ? createCapsule(railCapsule, railCore) : null;
+    scope.defer(() => dock?.dispose());
+    let dockAt = -2;
+    // The station mark: the current glyph folds back to a square, then becomes the next one.
+    const mark = stepsEl?.querySelector<SVGSVGElement>(".jny-mark") ?? null;
+    const markPath = mark?.querySelector("path") ?? null;
+    const markShape = createSpring(0), markShow = createSpring(0);
+    let markIndex = 0, markLast = "";
     stepEls.forEach((el, i) => el.addEventListener("click", jumpers[i]));
 
     const tagEl = section.querySelector<HTMLElement>(".jny-tag b");
@@ -788,7 +800,7 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     const unlockCue = section.querySelector<HTMLElement>(".jny-unlock-cue");
     const stepsWrap = stepsEl;
     // Copy is staged by scroll and moved by time-based springs (staged-motion.ts).
-    const beats=(root:Element|null)=>root?Array.from(root.querySelectorAll<HTMLElement>("[data-beat]")):[];
+    const beats=(root:Element|null)=>root?Array.from(root.querySelectorAll<HTMLElement>("[data-beat]")).filter(n=>!n.closest("[data-own-stage]")):[];
     const entryMotion=createStagedMotion(beats(entry),{initial:0});
     const stepMotion=createStagedMotion(beats(stepsEl));
     const finaleMotion=createStagedMotion(beats(finaleCopy));
@@ -815,19 +827,27 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     const faceShrink=glyphEls.map(()=>1);
     const third=section.querySelector<HTMLElement>(".jny-entry-third");
 
+    // The scroll as the scene reads it. With display scaling the browser can round a smooth
+    // scroll's fractional position back and forth by a device pixel while nothing is moving;
+    // the scene ignores changes under 1.5 px, so a page at rest is perfectly still.
+    let steadyY = window.scrollY;
+    const readScroll = () => { const y = window.scrollY; if (Math.abs(y - steadyY) >= 1.5 || y === 0) steadyY = y; return steadyY; };
     const progress = () => {
-      return scrollToStory(Math.min(1, Math.max(0, (window.scrollY - sectionTop - entrySpan) / scrollSpan)));
+      return scrollToStory(Math.min(1, Math.max(0, (readScroll() - sectionTop - entrySpan) / scrollSpan)));
     };
 
     const tgt = new THREE.Vector3();
     let time = 0;
     let pS = progress();
-    const smoothProgress = createCameraProgress(pS);
-    const entryProgress = () => entrySpan ? THREE.MathUtils.clamp((window.scrollY - sectionTop) / entrySpan, 0, 1) : 1;
+    // The camera and the path follow the scroll continuously (no snapping), through a
+    // critically damped follower that is independent of frame rate.
+    const smoothProgress = createCameraProgress(pS, .9);
+    let crane = 0;
+    const entryProgress = () => entrySpan ? THREE.MathUtils.clamp((readScroll() - sectionTop) / entrySpan, 0, 1) : 1;
     const smoothEntry = createCameraProgress(entryProgress(), .32);
-    const conversationProgress = () => THREE.MathUtils.clamp((window.scrollY - sectionTop - entrySpan - scrollSpan) / conversationSpan, 0, 1);
+    const conversationProgress = () => THREE.MathUtils.clamp((readScroll() - sectionTop - entrySpan - scrollSpan) / conversationSpan, 0, 1);
     const smoothConversation = createCameraProgress(conversationProgress(), .42);
-    const unlockProgress = () => THREE.MathUtils.clamp((window.scrollY-sectionTop-entrySpan-scrollSpan-conversationSpan)/Math.max(1,unlockSpan),0,1);
+    const unlockProgress = () => THREE.MathUtils.clamp((readScroll()-sectionTop-entrySpan-scrollSpan-conversationSpan)/Math.max(1,unlockSpan),0,1);
     const smoothUnlock = createCameraProgress(unlockProgress(), .38);
     const isolatedWorld = new Map<THREE.Object3D, boolean>();
     let lastEntryProgress = -1;
@@ -857,7 +877,7 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     const frame = (now: number) => {
       const frameStart = profileEnabled ? performance.now() : 0;
       raf = 0;
-      if (!visible || document.hidden || screenHidden() || isCaseStudyOpen()) return;
+      if (!stageVisible() || document.hidden || isCaseStudyOpen()) return;
       raf = requestAnimationFrame(frame);
       if(now-renderedAt<1000/adaptive.current.fps-1)return;
       const elapsed=renderedAt?now-renderedAt:1000/adaptive.current.fps;
@@ -872,7 +892,13 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       const p = progress();
       const immediate=reduce||snapOnNextFrame;
       previousScrollY=scrollY;
-      pS = smoothProgress(p, dt, immediate);
+      // The route fills with the scroll, continuously. A heavier, critically damped follower
+      // (no overshoot, never a jump) turns the wheel's steps into one smooth glide.
+      const before = pS;
+      pS = smoothProgress(p, springDt, immediate);
+      // A crane on a jib: while the camera travels it rises and widens a touch, then settles in.
+      const speed = immediate ? 0 : Math.abs(pS - before) / Math.max(springDt, 1e-3);
+      crane += (Math.min(1, speed / .06) - crane) * (1 - Math.exp(-springDt * 2.4));
       const conversation = smoothConversation(conversationProgress(), dt, immediate);
       const unlock = smoothUnlock(unlockProgress(), dt, immediate);
       const unlockClear = sm(0,.14,unlock);
@@ -889,9 +915,15 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       else room.step(roomWanted, springDt);
       const roomOpen = room.value;
       const handoff = THREE.MathUtils.clamp(roomOpen, 0, 1);
-      header?.classList.toggle("jny-header-dark", handoff > .55 && !(unlock > .505 && unlock < .88) && unlock<.85 && !showroomStage?.classList.contains('lumen-transferring') || header?.dataset.themeDark === "true");
+      header?.classList.toggle("jny-header-dark", handoff > .55 && unlock < .54 && !showroomStage?.classList.contains('lumen-transferring') || header?.dataset.themeDark === "true");
       conversationField.visible = roomOpen > .001;
-      conversationField.material.uniforms.opacity.value = Math.max(0, roomOpen);
+      // Behind the doors the dark conversation backdrop gives way to the next page's paper while
+      // the doors are still shut (the key is turning, the leaves fill the frame), so the change is
+      // never seen and the doorway always shows the page's own colour when the leaves part.
+      const doorway = THREE.MathUtils.smoothstep(unlock, .79, .83);
+      conversationField.material.uniforms.opacity.value = Math.max(0, roomOpen) * (1 - doorway);
+      conversationField.visible = roomOpen > .001 && doorway < .999;
+      (scene.background as THREE.Color).copy(BG).lerp(PAPER, doorway);
       conversationField.material.uniforms.aspect.value = camera.aspect;
       // Scroll picks the sentence; springs move the words and the cube.
       const nextCubeBeat = unlock > .015 ? AFTER : handoff < .6 ? BEFORE
@@ -956,10 +988,8 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       const hp = curve.getPointAt(u,routeHead);
       const routeSpeed = Math.abs(s - previousRouteDistance) / Math.max(dt, 0.001);
       previousRouteDistance = s;
-      if (routeSpeed > 0.6) routeDots.add(hp.x, hp.z, now / 1000);
-      routeDots.update(now / 1000);
+      // The ribbon carries its own flow now; the route no longer stamps a dot wake.
       pointerDots.update(now / 1000);
-      phaseDioramas.update(pS);
       finale.update(pS, time, reduce);
       finale.root.scale.setScalar(THREE.MathUtils.lerp(THREE.MathUtils.lerp(1, mobile ? .62 : .68, roomOpen), 1, unlockGrow) * (1 + .16 * cubePop.value));
       finale.root.rotation.y = reduce ? 0 : cubeYaw.value;
@@ -968,19 +998,66 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       finale.root.position.y = 10 * (1 - finale.root.scale.x);
       if (unlock > 0) finale.updateUnlock(unlock, reduce);
       padRingMat.emissiveIntensity = .3 + sm(.9, .99, pS) * 2;
-      trailUniforms.uH.value = u;
-      head.position.set(hp.x, .32, hp.z);
-      head.visible = u > .0005;
+      headU = reduce || headU < 0 ? u : headU + (u - headU) * (1 - Math.exp(-springDt * 9));
+      route.uniforms.uH.value = headU;
+      route.uniforms.uTime.value = time;
+      const headColor = route.colorAt(headU);
+      headLight.color.copy(headColor).lerp(WHITE, .5);
+      {
+        const hu = Math.min(1, Math.max(0, headU));
+        curve.getPointAt(hu, headAt);
+        curve.getTangentAt(hu, headTangent).setY(0).normalize();
+        const step = Math.max(springDt, 1e-3), dist = hu * L;
+        const rawV = lastHeadU < 0 ? 0 : (dist - lastHeadU * L) / step;
+        lastHeadU = hu;
+        // Inertia: the cube's speed follows the road's with a little lag, so it builds and winds down.
+        const vPrev = headV;
+        headV += (rawV - headV) * (1 - Math.exp(-step * 3.5));
+        headAcc += ((headV - vPrev) / step - headAcc) * (1 - Math.exp(-step * 4));
+        // The tumble: rate set by speed, capped near half a turn per second; at rest it eases onto a face.
+        const omega = THREE.MathUtils.clamp(headV / (HEAD_SIZE * 2.6), -3.1, 3.1);
+        if (!reduce) headSpin += omega * step;
+        if (Math.abs(headV) < .9 || reduce) {
+          const face = Math.round(headSpin / (Math.PI / 2)) * Math.PI / 2;
+          headSpin = reduce ? face : headSpin + (face - headSpin) * (1 - Math.exp(-step * 2.6));
+        }
+        // It leans into acceleration and back on braking, and banks into turns (sideways acceleration).
+        const yaw = Math.atan2(headTangent.x, headTangent.z);
+        let yawRate = headYawPrev === null ? 0 : yaw - headYawPrev;
+        if (yawRate > Math.PI) yawRate -= Math.PI * 2; if (yawRate < -Math.PI) yawRate += Math.PI * 2;
+        headYawPrev = yaw; yawRate /= step;
+        const leanGoal = reduce ? 0 : THREE.MathUtils.clamp(headAcc * .012, -.22, .22);
+        const bankGoal = reduce ? 0 : THREE.MathUtils.clamp(-headV * yawRate * .02, -.3, .3);
+        if (reduce) { headLean.snap(leanGoal); headBank.snap(bankGoal); } else { headLean.step(leanGoal, step); headBank.step(bankGoal, step); }
+        headYaw.setFromUnitVectors(Z_AXIS, headTangent);
+        head.quaternion.copy(headYaw)
+          .multiply(headRoll.setFromAxisAngle(X_AXIS, headLean.value))
+          .multiply(headTilt.setFromAxisAngle(Z_AXIS, headBank.value))
+          .multiply(headTumble.setFromAxisAngle(X_AXIS, headSpin));
+        let nearest = Infinity;
+        STOP.forEach(stop => { nearest = Math.min(nearest, Math.abs(dist - stop)); });
+        // The platform takes the idea in as it arrives; it rises out again on the way.
+        const presentGoal = nearest < 17 ? 0 : 1;
+        if (reduce) headPresent.snap(presentGoal); else headPresent.step(presentGoal, springDt);
+        const k = headPresent.value > 1 ? 1 + (headPresent.value - 1) * 3 : Math.max(0, headPresent.value);
+        // It floats just above the road, a touch higher at speed, breathing slowly when still.
+        const hover = .7 + .35 * Math.min(1, Math.abs(headV) / 45) + (reduce ? 0 : Math.sin(time * 1.4) * .08);
+        head.position.set(headAt.x, (HEAD_SIZE * .87 + hover) * k, headAt.z);
+        head.scale.setScalar(Math.max(.001, k));
+        head.visible = hu > .0005 && k > .003;
+      }
       let inside = 0;
       stations.forEach((st, si) => {
         inside = Math.max(inside, Math.max(0, 1 - Math.abs(s - STOP[si]) / 12));
       });
-      headLight.position.set(hp.x, 1.8, hp.z);
+      headLight.position.set(head.position.x, 2.4, head.position.z);
 
+      journeyFloor.update(time, floorActs);
       stations.forEach((st, i) => {
         if(entryP===1&&Math.abs(s-STOP[i])>135)return;
         const actTarget = sm(0, 5, s - (STOP[i] - 12)) * (1 - sm(0, 10, s - (STOP[i] + 12)));
         st.act += (actTarget - st.act) * Math.min(1, dt * 5);
+        floorActs[i] = st.act;
         const act = st.act;
         const inK = Math.max(0, 1 - Math.abs(s - STOP[i]) / 14);
         st.insideK = inK;
@@ -1028,28 +1105,39 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       const finalApproach = FINAL_FRAMING(pS);
       const finaleFraming = sm(.89, .985, pS);
       const fifthApproach = FIFTH_FRAMING(pS);
-      // Include the operations floor and rack crew in the growing-campus composition.
-      const approachDistance = THREE.MathUtils.lerp(CAMERA_DISTANCE * (mobile ? 1.3 : 1), mobile ? 174 : 138, fifthApproach);
+      const testCellFraming = TEST_CELL_FRAMING(pS);
+      const capacityFraming = CAPACITY_FRAMING(pS);
+      const launchFraming = LAUNCH_FRAMING(pS);
+      const standardDistance = THREE.MathUtils.lerp(CAMERA_DISTANCE * (mobile ? 1.3 : 1), mobile ? 174 : 138, fifthApproach);
+      const testCellDistance = THREE.MathUtils.lerp(standardDistance, mobile ? 157 : 118, testCellFraming);
+      const approachDistance = THREE.MathUtils.lerp(testCellDistance, mobile ? 184 : 128, capacityFraming);
       const approachFov = THREE.MathUtils.lerp(mobile ? 32 : camera.aspect < 1.05 ? 26 : 20, mobile ? 25 : 18, fifthApproach);
-      const journeyDistance = THREE.MathUtils.lerp(THREE.MathUtils.lerp(approachDistance, mobile ? 190 : 142, finalApproach), mobile ? 106 : 152, finaleFraming);
+      const finalDistance = THREE.MathUtils.lerp(approachDistance, mobile ? 190 : 142, finalApproach);
+      const launchDistance = THREE.MathUtils.lerp(finalDistance, mobile ? 153 : 119, launchFraming);
+      const journeyDistance = THREE.MathUtils.lerp(launchDistance, mobile ? 106 : 152, finaleFraming);
       const entryDistance = THREE.MathUtils.lerp(mobile ? 22 : 26,mobile ? 47 : 52,ENTRY_SPACE(entryP));
-      const dist = Math.exp(THREE.MathUtils.lerp(Math.log(entryDistance), Math.log(journeyDistance), reveal));
-      const desiredFov = THREE.MathUtils.lerp(mobile ? 27 : 18, THREE.MathUtils.lerp(THREE.MathUtils.lerp(approachFov, mobile ? 23 : 11, finalApproach), mobile ? 26 : 14, finaleFraming), reveal);
+      const dist = Math.exp(THREE.MathUtils.lerp(Math.log(entryDistance), Math.log(journeyDistance), reveal)) * (1 + .1 * crane * reveal);
+      const finalFov = THREE.MathUtils.lerp(approachFov, mobile ? 23 : 11, finalApproach);
+      const launchFov = THREE.MathUtils.lerp(finalFov, mobile ? (camera.aspect < .58 ? 32 : 28) : 17, launchFraming);
+      const desiredFov = THREE.MathUtils.lerp(mobile ? 27 : 18, THREE.MathUtils.lerp(launchFov, mobile ? 26 : 14, finaleFraming), reveal);
       // The intro makes room for its copy; every station uses the centered lens.
       const centering = ENTRY_CENTER(entryP);
       // During the stations the scene slides to the right half, leaving clear ground for the copy.
-      const viewX = mobile ? 0 : -.18 * (1-centering) - .12 * centering * (1 - THREE.MathUtils.clamp(roomOpen, 0, 1));
-      const viewY = (mobile ? -.2 : .08) * (1-centering);
-      if (entryP !== lastCameraEntry || Math.abs(camera.fov - desiredFov) > .001 || Math.abs(viewX-lastViewX) > .00001 || Math.abs(viewY-lastViewY) > .00001) {
+      const unlockCentering = 1 - sm(.01, .16, unlock);
+      const viewX = mobile ? 0 : unlockCentering * (-.18 * (1-centering) - .12 * centering * (1 - THREE.MathUtils.clamp(roomOpen, 0, 1)) - .027 * testCellFraming - .022 * capacityFraming - .024 * launchFraming);
+      const capacityLift = mobile ? (camera.aspect < .58 ? .22 : .18) : .11;
+      const viewY = unlockCentering * ((mobile ? -.2 : .08) * (1-centering) + (mobile ? .12 : .09) * testCellFraming + capacityLift * capacityFraming + (mobile ? .21 : .125) * launchFraming);
+      const lensFov = desiredFov;
+      if (entryP !== lastCameraEntry || Math.abs(camera.fov - lensFov) > .001 || Math.abs(viewX-lastViewX) > .00001 || Math.abs(viewY-lastViewY) > .00001) {
         lastCameraEntry = entryP; lastViewX = viewX; lastViewY = viewY;
-        camera.fov = desiredFov;
+        camera.fov = lensFov;
         camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * viewX, window.innerHeight * viewY, window.innerWidth, window.innerHeight);
         camera.updateProjectionMatrix();
       }
-      tgt.set(hp.x, THREE.MathUtils.lerp(8.8, 6, reveal), hp.z);
+      tgt.set(hp.x, THREE.MathUtils.lerp(SPARK_IDEA_Y, 6, reveal), hp.z);
       tgt.lerp(padPos, finaleFraming);
       tgt.y = THREE.MathUtils.lerp(tgt.y, 10, finaleFraming);
-      const el = THREE.MathUtils.degToRad(CAMERA_ELEVATION(pS));
+      const el = THREE.MathUtils.degToRad(CAMERA_ELEVATION(pS) + launchFraming * 5.8 + 3.5 * crane * reveal);
       const az = THREE.MathUtils.degToRad(CAMERA_YAW(pS));
       camera.position.set(
         tgt.x + Math.sin(az) * Math.cos(el) * dist,
@@ -1068,7 +1156,8 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
         conversationField.material.uniforms.center.value.set((cubeCenter.x + 1) / 2, (cubeCenter.y + 1) / 2);
         const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
         const x = Math.round((cubeCenter.x + 1) / 2 * w), y = Math.round((1 - cubeCenter.y) / 2 * h), r = Math.round(Math.abs(cubeEdge.x - cubeCenter.x) / 2 * w);
-        if (concierge && (x !== cubeX || y !== cubeY || r !== cubeR)) {
+        // The copy only follows a real move of the cube (2 px or more), never sub-pixel noise.
+        if (concierge && (Math.abs(x - cubeX) >= 2 || Math.abs(y - cubeY) >= 2 || Math.abs(r - cubeR) >= 2)) {
           cubeX = x; cubeY = y; cubeR = r;
           concierge.style.setProperty("--cube-x", `${x}px`); concierge.style.setProperty("--cube-y", `${y}px`); concierge.style.setProperty("--cube-r", `${r}px`);
         }
@@ -1085,19 +1174,26 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
         isolatedWorld.clear();
       }
       if(projectShowcase){
-        const shown=unlock>.84;
+        // Shown (still clipped shut) well before the doors part, so its first style and layout
+        // pass never lands on the frame the leaves start to move.
+        const shown=unlock>.6;
         projectShowcase.style.visibility=shown?'visible':'hidden';
-        projectShowcase.style.setProperty('--showcase-open',String(sm(.845,.91,unlock)));
-        const interactive = unlock >= .91;
+        projectShowcase.style.setProperty('--showcase-open',unlockChapter.opening.toFixed(4));
+        const interactive = unlockChapter.opening >= .999;
         if (projectShowcase.inert === interactive) {
           projectShowcase.inert = !interactive;
           projectShowcase.setAttribute("aria-hidden", String(!interactive));
         }
       }
-      unlockCue?.classList.toggle("jny-on", unlock > .02 && unlock < .86);
+      unlockCue?.classList.toggle("jny-on", unlock > .02 && unlock < .84);
+      unlockCue?.classList.toggle("jny-unlock-cue-light", unlock >= .54);
       section.dataset.unlockProgress=unlock.toFixed(4);
+      // Station 01 turns its loose ideas into a brief, a scope and a plan once the camera arrives.
+      sparkStudio?.update(entryP > .97 && pS > .02, entryP > .86, springDt, reduce, time);
       const spark = stations[0].extras.sparkRig;
-      spark?.update(entryP,dt,reduce,{opening:Math.max(0,sparkOpen.value),turn:sparkTurn.value,faces:faceShrink});
+      // The idea cube opens in the intro, and again at its station to let its thoughts out.
+      spark?.update(entryP,springDt,reduce,{opening:Math.max(0,sparkOpen.value,sparkStudio?.cubeOpen ?? 0),turn:sparkTurn.value,faces:faceShrink});
+      if (spark && sparkStudio) spark.root.scale.setScalar(sparkStudio.cubeScale);
       if (spark && glyphEls.length && (glyphSprings.some(s => Math.abs(s.value) > .001) || glyphLast.some(v => v !== 0))) {
         spark.root.updateMatrixWorld(true);
         faceRight.setFromMatrixColumn(camera.matrixWorld, 0);
@@ -1128,6 +1224,8 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
 
       ambient.intensity = THREE.MathUtils.lerp(.65, 2.55, finalApproach);
       sun.intensity = THREE.MathUtils.lerp(2.1, .85, finalApproach);
+      ambient.intensity = THREE.MathUtils.lerp(ambient.intensity, 1.28, launchFraming);
+      sun.intensity = THREE.MathUtils.lerp(sun.intensity, 1.83, launchFraming);
       ambient.intensity = THREE.MathUtils.lerp(ambient.intensity, 1.1, finaleFraming);
       sun.intensity = THREE.MathUtils.lerp(sun.intensity, 1.8, finaleFraming);
       scene.environmentIntensity = THREE.MathUtils.lerp(.25, 1, finalApproach);
@@ -1184,6 +1282,32 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
         stepBeat = nextStepBeat;
       }
       stepMotion.update(stepBeat, springDt, reduce);
+      // Station 02: the idea cube unfolds into a clickable prototype once the camera arrives.
+      shapeStudio?.update(entryP > .97 && pS > FOCUS[1] - .06, stepsOn && idx === 1, springDt, reduce, time);
+      // Station 03: production runs once the camera arrives; going back past station 02 resets it.
+      systemFoundry?.update(pS > FOCUS[2] - .025, pS < FOCUS[1] + .02, springDt, reduce, time);
+      // Station 04: power up and prove the system once the camera arrives.
+      provingGround?.update(entryP > .97 && pS > FOCUS[3] - .025, stepsOn && idx === 3, springDt, reduce);
+      // Station 05: traffic surges, capacity scales out, then a rolling release.
+      capacityField?.update(entryP > .97 && pS > FOCUS[4] - .025, Math.abs(pS - FOCUS[4]) < .12, springDt, reduce);
+      // Station 06: go live, monitor, hand over — one scroll beat each.
+      launchWorld?.update(launchBeatAt(p), Math.abs(pS - FOCUS[5]) < .12, springDt, reduce);
+      const dockWant = stepsOn ? idx : -1;
+      if (dockWant !== dockAt) { dockAt = dockWant; dock?.to(dockWant >= 0 ? stepEls[dockWant].querySelector<HTMLElement>("button.jny-t") : null); }
+      if (mark && markPath) {
+        let shapeGoal = stepsOn ? 1 : 0;
+        if (stepsOn && markIndex !== idx) { shapeGoal = 0; if (markShape.value < .06) markIndex = idx; }
+        if (reduce) { markIndex = stepsOn ? idx : markIndex; markShape.snap(shapeGoal); markShow.snap(stepsOn ? 1 : 0); }
+        else { markShape.step(shapeGoal, springDt); markShow.step(stepsOn ? 1 : 0, springDt); }
+        const m = markShape.value, show = Math.max(0, markShow.value > 1 ? 1 + (markShow.value - 1) * 2.5 : markShow.value);
+        const key = `${markIndex}|${m.toFixed(3)}|${show.toFixed(3)}`;
+        if (key !== markLast) {
+          markLast = key;
+          markPath.setAttribute("d", glyphPath(markIndex, m));
+          mark.style.setProperty("--c", STATIONS[markIndex].color);
+          mark.style.transform = `scale(${show.toFixed(4)}) rotate(${((1 - m) * -40).toFixed(2)}deg)`;
+        }
+      }
       stepBodies.forEach((body, i) => { if (!body) return; const on = stepMotion.showing(i); if (body.dataset.on !== String(on)) body.dataset.on = String(on); });
       heroes.forEach((hero, i) => {
         if (!hero) return;
@@ -1236,7 +1360,7 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       if(reduce||settledShowcase){cancelAnimationFrame(raf);raf=0;}
     };
     syncRendering = () => {
-      if (prepared && visible && !document.hidden && !screenHidden() && !isCaseStudyOpen()) {
+      if (prepared && stageVisible() && !document.hidden && !isCaseStudyOpen()) {
         if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
       } else {
         cancelAnimationFrame(raf); raf = 0;

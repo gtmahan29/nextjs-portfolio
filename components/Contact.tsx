@@ -17,7 +17,7 @@ const Contact = () => {
       <div className="w-full flex items-center justify-center">
         <a
           className="relative items-center mt-6 justify-center inline-block p-4 px-5 py-3 overflow-hidden font-medium text-indigo-600 transition-all duration-500 rounded-lg group hover:scale-105"
-          href="/#about"
+          href="/#contact"
         >
           <span className="absolute top-0 left-0 w-40 h-40 -mt-10 -ml-3 transition-all duration-700 bg-[#FFFBAD] rounded-lg blur-md ease"></span>
           <span className="absolute inset-0 w-full h-full transition duration-700 ease">

@@ -5,6 +5,9 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { createHeroClouds } from "./hero-clouds";
 import { createPressImpact } from "./start-press-impact";
 import { createStartMotion } from "./hero-start-motion";
+import { createSpring } from "./motion-curve";
+import { play } from "./sfx";
+import { reportLoad } from "./page-loader";
 
 export async function mountStartScene(host: HTMLDivElement, onReady: () => void) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha:true });
@@ -32,11 +35,36 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
   const environment = pmrem.fromScene(room, .01);
   scene.environment = environment.texture;
   const section=host.closest<HTMLElement>(".hero-start")!;
-  const title=host.querySelector<HTMLElement>(".hero-start-title");
   const content=host.querySelector<HTMLElement>(".hero-start-next");
   const hit=section.querySelector<HTMLButtonElement>(".hero-start-hit");
   const motion=createStartMotion();
   const activate=()=>motion.activate();section.addEventListener("hero-start-activate",activate);
+  // Touch, mouse and keyboard all drive the same physical switch.
+  let hoverOn=false;
+  const onEnter=()=>{hoverOn=true;motion.hover(true);syncRendering();};
+  const onLeave=()=>{hoverOn=false;motion.hover(false);motion.cancel();syncRendering();};
+  const onDown=(event:PointerEvent)=>{if(event.button!==0)return;motion.down();syncRendering();};
+  const onCancel=()=>{motion.cancel();syncRendering();};
+  const onKeyDown=(event:KeyboardEvent)=>{if(event.repeat||(event.key!==" "&&event.key!=="Enter"))return;motion.down();syncRendering();};
+  // Space anywhere on the opening screen presses the key, as the hint promises.
+  let spaceHeld=false;
+  const typing=(el:Element|null)=>!!el&&(el.matches("input,textarea,select,[contenteditable],button,a")||el.closest("[contenteditable]")!==null);
+  const onPageKeyDown=(event:KeyboardEvent)=>{
+    if(event.key!==" "||typing(document.activeElement)||section.getBoundingClientRect().top<-8||hit?.disabled)return;
+    event.preventDefault();if(event.repeat||spaceHeld)return;
+    spaceHeld=true;section.dataset.keyHeld="true";motion.down();syncRendering();
+  };
+  const onPageKeyUp=(event:KeyboardEvent)=>{
+    if(event.key!==" "||!spaceHeld)return;
+    spaceHeld=false;delete section.dataset.keyHeld;event.preventDefault();hit?.click();
+  };
+  const onBlur=()=>{if(spaceHeld){spaceHeld=false;delete section.dataset.keyHeld;}motion.hover(false);motion.cancel();syncRendering();};
+  hit?.addEventListener("pointerenter",onEnter);hit?.addEventListener("pointerleave",onLeave);
+  hit?.addEventListener("pointerdown",onDown);hit?.addEventListener("pointercancel",onCancel);hit?.addEventListener("keydown",onKeyDown);
+  hit?.addEventListener("blur",onCancel);
+  window.addEventListener("keydown",onPageKeyDown);window.addEventListener("keyup",onPageKeyUp);window.addEventListener("blur",onBlur);
+  // The key arrives on the shared spring a moment after the sky opens; its edge light answers hover and impact.
+  const entry=createSpring(0),glow=createSpring(0),arrivalSpin=new THREE.Quaternion(),UP=new THREE.Vector3(0,1,0);let readyAt=-1,edgeMaterial:THREE.MeshStandardMaterial|undefined,lastCap="";
   const reviewValue=process.env.NODE_ENV!=="production"?new URLSearchParams(location.search).get("heroReview"):null;
   const review=reviewValue!==null&&Number.isFinite(Number(reviewValue));
   const readUnits=()=>review?Math.max(0,Math.min(8.5,Number(reviewValue))):Math.max(0,-section.getBoundingClientRect().top/Math.max(1,host.clientHeight));
@@ -58,9 +86,12 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
   const tumbleEuler=new THREE.Euler();
   const topFacing=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/2);
   let viewportHeight=7,modelReady=false;
+  let lastLift=0;
+  const squash=createSpring(0);let lastBow=0;
   pivot.scale.setScalar(.64);
   const press = new THREE.Group(); pivot.add(press);
   const clouds=await createHeroClouds();
+  reportLoad("sky",1);
   const cloudRenderer=new THREE.WebGLRenderer({antialias:false,alpha:false});
   cloudRenderer.domElement.className="hero-start-cloud-canvas";
   cloudRenderer.domElement.setAttribute("aria-hidden","true");
@@ -123,10 +154,24 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
     frame=requestAnimationFrame(animate);
     const dt=Math.min(.05,Math.max(0,(time-lastMotion)/1000));lastMotion=time;
     const state=motion.update(readUnits(),dt,modelReady,reduced,review);
+    for(const event of motion.drain()){
+      play(event==="down"?"key_down":event==="contact"?"key_thock":"key_up");
+      // Bottom-out: the whole unit squashes and bows a hair toward you, on the shared spring.
+      if(event==="contact"&&!reduced)squash.kick(3.2);
+    }
+    // The launch has one sound: air, as the key leaves its mount.
+    if(state.real&&lastLift<=.04&&state.lift>.04)play("key_whoosh");
+    lastLift=state.lift;
+    if(modelReady&&readyAt<0)readyAt=time;
+    let springsMoving=false;
+    if(readyAt>=0&&(reduced||time-readyAt>220)){if(reduced)entry.snap(1);else springsMoving=entry.step(1,dt)||springsMoving;}
+    const hovered=hoverOn||state.mode==="held";
+    if(reduced)glow.snap(hovered?1:0);else springsMoving=glow.step(hovered?1:0,dt)||springsMoving;
+    const e=entry.value;
     const storyVisible=state.contentOpacity>.005||(state.units>=2.12&&state.units<=6.35);
     section.dispatchEvent(new CustomEvent("hero-story-frame",{detail:{units:state.units,visible:storyVisible,contentOpacity:state.contentOpacity,reduced}}));
-    const pressHeight=.10-.68*state.cap;
-    const moving=state.active||Math.abs(state.units-lastUnits)>.0001||Math.abs(pivot.rotation.x-targetX*(1-state.lift))+Math.abs(pivot.rotation.y-targetY*(1-state.lift))>.001;
+    const pressHeight=.10-.55*state.cap;
+    const moving=springsMoving||state.active||Math.abs(state.units-lastUnits)>.0001||Math.abs(pivot.rotation.x-targetX*(1-state.lift))+Math.abs(pivot.rotation.y-targetY*(1-state.lift))>.001;
     if(!moving&&!cloudDirty&&!flight.visible&&cloudCoverage<.001&&state.contentOpacity===1&&content?.style.opacity==="1")return;
     const interval=moving?1000/60:1000/30;
     if(time-lastRender < interval-1 || (reduced&&!moving&&!cloudDirty)) return;
@@ -147,13 +192,24 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
     const turn=reduced?state.drop*.16:state.fallTime;
     tumble.setFromEuler(tumbleEuler.set(1.25*turn,-.46*turn,.10*turn));
     flight.quaternion.multiply(tumble);
+    if(e<1)flight.quaternion.multiply(arrivalSpin.setFromAxisAngle(UP,(1-Math.max(0,e))*-.9));
     // The object remains opaque all the way beyond the lower viewport edge.
     flight.visible=state.drop<1;
     press.position.y=pressHeight;
-    impact.update(state.impact,reduced);
-    if(title){title.setAttribute("aria-hidden",String(state.titleOpacity<.1));title.style.opacity=String(state.titleOpacity);title.style.transform=`translate3d(0,${-20*(1-state.titleOpacity)}px,0)`;}
+
+    // Pop inside the arrival: the overshoot of the same spring is the bounce (k = 3 for 3D).
+    const arrive=e>1?1+(e-1)*3:Math.max(0,e);
+    if(reduced)squash.snap(0);else squash.step(0,dt);
+    const sq=squash.value,base=.64*Math.max(.001,arrive);
+    pivot.scale.set(base*(1+.035*sq),base*(1-.07*sq),base*(1+.035*sq));
+    // The bow is an offset on top of the pointer tilt: last frame's is removed before this one's is added.
+    const bow=.05*sq;pivot.rotation.x+=bow-lastBow;lastBow=bow;
+    pivot.position.y=-.65-(1-Math.min(1,e))*.9;
+    if(edgeMaterial){const flash=state.impact>=0?(1-state.impact)**2:0;edgeMaterial.emissiveIntensity=2.2+1.5*Math.max(0,glow.value)+3*flash;}
+    const capText=Math.max(0,state.cap).toFixed(3);if(capText!==lastCap){lastCap=capText;section.style.setProperty("--cap",capText);}
+    impact.update(-1,reduced);
     if(content){content.style.opacity='1';content.style.visibility=storyVisible?'visible':'hidden';content.style.transform='none';content.setAttribute("aria-hidden",String(!storyVisible));}
-    if(hit){hit.disabled=state.mode!=="idle";hit.style.pointerEvents=state.mode==="idle"?"auto":"none";hit.setAttribute("aria-hidden",String(state.units>.25));}
+    if(hit){hit.disabled=!state.interactive;hit.style.pointerEvents=state.interactive?"auto":"none";hit.setAttribute("aria-hidden",String(state.units>.25));}
     if(Math.abs(cloudScroll-state.lift*.18)+Math.abs(cloudCoverage-state.cloudCoverage)+Math.abs(cloudArrival-state.cloudArrival)+Math.abs(whiteout-state.whiteout)>.0001){
       cloudScroll=state.lift*.18;cloudCoverage=state.cloudCoverage;cloudArrival=state.cloudArrival;whiteout=state.whiteout;cloudDirty=true;
     }
@@ -172,7 +228,8 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
   };
   syncRendering();
   try {
-    const gltf=await new GLTFLoader().loadAsync("/holographic-start/holographic-start.glb?v=continuous-glass-4");
+    const gltf=await new GLTFLoader().loadAsync("/holographic-start/holographic-start.glb?v=continuous-glass-4",event=>{if(event.total)reportLoad("key",event.loaded/event.total*.95);});
+    reportLoad("key",1);
     gltf.scene.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return;
       object.castShadow=true; object.receiveShadow=true;
@@ -224,7 +281,7 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
       if (objectName==="Cyan lower optical edge" && !Array.isArray(object.material) && object.material instanceof THREE.MeshStandardMaterial) {
         const edge=object.material.clone(); edge.map=null; edge.emissiveMap=null;
         edge.color.setHex(0x72eeff); edge.emissive.setHex(0x28dbff); edge.emissiveIntensity=2.2;
-        object.material=edge;
+        object.material=edge;edgeMaterial=edge;
       }
     });
     pivot.add(gltf.scene);
@@ -241,9 +298,14 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
     press.position.y=initialPress;
     renderHero();
     modelReady=true;renderer.domElement.dataset.modelReady="true"; onReady();
+    // The first frame with the key in it is on screen: the loader may leave.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>reportLoad("frame",1)));
   } catch (error) { console.error("Holographic hero:",error); }
   return () => {
-    alive=false;impact.dispose();section.removeEventListener("hero-start-activate",activate);window.removeEventListener("scroll",syncRendering);cancelAnimationFrame(frame); observer.disconnect(); visibility.disconnect();
+    alive=false;impact.dispose();section.removeEventListener("hero-start-activate",activate);
+    hit?.removeEventListener("pointerenter",onEnter);hit?.removeEventListener("pointerleave",onLeave);
+    hit?.removeEventListener("pointerdown",onDown);hit?.removeEventListener("pointercancel",onCancel);hit?.removeEventListener("keydown",onKeyDown);hit?.removeEventListener("blur",onCancel);
+    window.removeEventListener("keydown",onPageKeyDown);window.removeEventListener("keyup",onPageKeyUp);window.removeEventListener("blur",onBlur);window.removeEventListener("scroll",syncRendering);cancelAnimationFrame(frame); observer.disconnect(); visibility.disconnect();
     document.removeEventListener("visibilitychange",syncRendering);
     window.removeEventListener(CASE_VISIBILITY_EVENT,syncRendering);
     host.parentElement?.removeEventListener("pointermove",move); host.parentElement?.removeEventListener("pointerleave",leave);

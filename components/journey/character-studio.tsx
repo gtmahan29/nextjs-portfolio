@@ -82,7 +82,7 @@ export default function CharacterStudio() {
 
   return <main className="character-studio">
     <div className="character-stage" ref={host} aria-label="Interactive 3D character preview">
-      <a className="back-link" href="/journey">← Back to the journey</a>
+      <a className="back-link" href="/">← Back to the journey</a>
       <p className="orbit-hint">Drag to rotate · Scroll to zoom</p>
     </div>
     <aside className="character-controls">

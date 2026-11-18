@@ -46,14 +46,19 @@ export function useSceneRuntime(sectionRef:RefObject<HTMLElement>,canvasRef:RefO
           cleanup=releaseRuntime;section.dataset.sceneState="ready";latest.current.onReady?.();window.dispatchEvent(new Event('journey-scene-status'));
         }).catch(error=>{if(!own.signal.aborted&&!disposed){console.warn("3D scene unavailable",error);fail();}});
     };
+    // After the page loader leaves, every scene builds in the background (one at a time, through
+    // the setup queue), so nobody scrolls into a scene that is still loading.
+    const warmed=()=>(window as unknown as {__sceneWarm?:boolean}).__sceneWarm===true;
+    const warm=()=>{near=true;start();};
+    window.addEventListener('scene-warm',warm);
     const observer=new IntersectionObserver(([entry])=>{
-      near=reviewNear||entry.isIntersecting;
+      near=reviewNear||warmed()||entry.isIntersecting;
       // The long journey is frequently revisited. Suspend its render loop offscreen
       // but retain its context until route unmount, avoiding mid-scroll reconstruction.
       if(near)start();
     },{rootMargin:`${['journey','studio','project-archive'].includes(section.id)?innerHeight*3:innerHeight*.8}px 0px`});
     observer.observe(section);
-    if(reviewNear){near=true;start();}
+    if(reviewNear||warmed()){near=true;start();}
     const visibility=()=>{if(!document.hidden)start();};
     window.addEventListener('journey-scene-status',visibility);
     const lost=(event:Event)=>{if(!controller)return;event.preventDefault();fail();};
@@ -61,7 +66,7 @@ export function useSceneRuntime(sectionRef:RefObject<HTMLElement>,canvasRef:RefO
     document.addEventListener("visibilitychange",visibility);
     canvas.addEventListener("webglcontextlost",lost);canvas.addEventListener("webglcontextrestored",restored);
     return ()=>{
-      disposed=true;observer.disconnect();
+      disposed=true;observer.disconnect();window.removeEventListener('scene-warm',warm);
       window.removeEventListener('journey-scene-status',visibility);
       document.removeEventListener("visibilitychange",visibility);
       canvas.removeEventListener("webglcontextlost",lost);canvas.removeEventListener("webglcontextrestored",restored);

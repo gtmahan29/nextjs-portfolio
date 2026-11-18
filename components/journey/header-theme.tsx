@@ -6,7 +6,7 @@ import { useEffect } from "react";
 export default function HeaderTheme() {
   useEffect(() => {
     const header = document.querySelector<HTMLElement>(".jny-header");
-    const targets = Array.from(document.querySelectorAll<HTMLElement>(".jny-root .jny-closing, .jny-root .wp-why, .jny-root .wp-pricing, .jny-root .jny-footer, .jny-root .st-hall.jny-dark"));
+    const targets = Array.from(document.querySelectorAll<HTMLElement>(".jny-root .jny-closing, .jny-root .wp-why, .jny-root .wp-pricing, .jny-root .jny-footer, .jny-root .st-hall.jny-dark, .jny-root .glass-archive"));
     if (!header || !targets.length) return;
     let io: IntersectionObserver | undefined;
     const under = new Set<Element>();

@@ -82,7 +82,7 @@ export default function MeshySurfaceStudio() {
   },[asset,seating]);
   return <main style={{height:"100vh",background:"#d9e1e6",color:"#243746",display:"flex",flexDirection:"column"}}>
     <header style={{padding:16,display:"flex",gap:20,alignItems:"center",flexWrap:"wrap"}}>
-      <a href="/journey?scenePerf=1">← Journey</a>
+      <a href="/?scenePerf=1">← Journey</a>
       <label>Character <select aria-label="Character" style={{background:"#fff",color:"#243746",padding:4,borderRadius:4}} value={asset} onChange={e=>setAsset(Number(e.target.value))}>
         {MESHY_ASSETS.map((model,i)=><option disabled={seating&&i!==0&&i!==1} value={i} key={model.file}>{["Blueprint Dreamer","Shadow Scout","Crafter Ava","Midnight Scholar","Minimal Muse","Coral Boy"][i]}</option>)}
       </select></label>

@@ -90,23 +90,23 @@ export function createMeshyPopulationLayout(sites: DistrictSite[], route: [numbe
       // Scale: an operations room, a rack service crew and a short lead briefing.
       seat(0,-19,16,heading+Math.PI/2,"operations");seat(1,-19,21,heading+Math.PI/2,"operations");
       seat(1,-24,16,heading+Math.PI/2,"operations");seat(0,-24,21,heading+Math.PI/2,"operations");
-      work(-22,-12,heading+Math.PI/2,"repair");work(-22,-6,heading+Math.PI/2,"repair");
+      work(12,-27,heading+Math.PI/2,"repair");work(12,-21,heading+Math.PI/2,"repair");
       discussion(-24,10,[{asset:3},{asset:2}],2.4);
       listen();
-      visit([-33,-18],[-15,-12],[-18,-10],[2,1,4],"Inspect the operations racks");
+      visit([1,-33],[19,-27],[16,-25],[2,1,4],"Inspect the operations racks");
     } else {
       // Launch: a handover circle, a separate support conversation and a quiet lounge.
       discussion(-18,2,[{asset:3},{asset:2},{asset:0}],2.5);
       discussion(-20,20,[{asset:4},{asset:0}],2.3);
       seat(0,-5,24,heading-Math.PI/2,"lounge");seat(1,-10,24,heading+Math.PI/2,"lounge");
       listen();
-      visit([-34,-15],[-21,-8],[-24,-8],[2,4,1],"Read the launch checklist");
+      visit([0,-27],[13,-20],[10,-20],[2,4,1],"Read the launch checklist");
     }
   });
   // Short delivery/checking trips remain visible within each phase's workspace.
   const errands:[number,number,number,number,number,number][]=[
     [-33,-22,-23,-14,-26,-12], [34,22,25,11,28,14], [34,-18,25,-15,25,-11],
-    [32,-25,23,-13,25,-16], [-30,-22,-15,-14,-18,-12],
+    [32,-25,23,-13,25,-16], [4,-37,19,-29,16,-27],
   ];
   errands.forEach(([homeV,homeU,v,u,lookV,lookU],station)=>{
     const source=sites[station],c=Math.cos(source.heading),sn=Math.sin(source.heading);

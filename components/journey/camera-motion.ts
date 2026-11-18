@@ -40,17 +40,19 @@ export function createTravelTrack(keys: number[][]) {
   };
 }
 
-// Only travel windows change orientation. Views are already complete at arrival.
-export const CAMERA_YAW = createTravelTrack([[0, 0], [0.32, 0], [0.42, -55], [0.46, -55], [0.56, 0], [.61, 0], [.70, 45], [.74, 45], [.85, 44.034086], [1, 44.034086]]);
+// All six platforms share a front-facing camera. Turn as the camera leaves for the finale.
+export const CAMERA_YAW = createTravelTrack([[0, 0], [.89, 0], [.985, 44.034086], [1, 44.034086]]);
 export const CAMERA_ELEVATION = createTravelTrack([[0, 32], [.74, 32], [.85, 18.287747], [1, 18.287747]]);
 
-// Station one is already revealed by the introduction. Keep travel continuous,
-// with only brief viewing windows instead of long stretches of unchanged scenery.
+// Units match the original 500vh station span. Extend only the final hold
+// so the three launch beats have room to play and earlier stations keep their pacing.
 const scrollKeys = [
   [.18, 0], [.28, .15], [.32, .17], [.42, .32], [.46, .34],
   [.56, .49], [.60, .51], [.70, .66], [.74, .68],
-  [.85, .85], [.89, .87], [1, 1],
+  [.85, .85], [.89, 1.09], [1, 1.22],
 ];
+const scrollLength = scrollKeys[scrollKeys.length - 1][1];
+export const STATION_SCROLL_VH = Math.round(500 * scrollLength);
 function remap(value: number, from: number, to: number) {
   let i = 0;
   while (i < scrollKeys.length - 2 && value > scrollKeys[i + 1][from]) i++;
@@ -58,5 +60,5 @@ function remap(value: number, from: number, to: number) {
   const t = Math.max(0, Math.min(1, (value - a[from]) / (b[from] - a[from])));
   return a[to] + (b[to] - a[to]) * t;
 }
-export const storyToScroll = (story: number) => remap(story, 0, 1);
-export const scrollToStory = (scroll: number) => remap(scroll, 1, 0);
+export const storyToScroll = (story: number) => remap(story, 0, 1) / scrollLength;
+export const scrollToStory = (scroll: number) => remap(scroll * scrollLength, 1, 0);
