@@ -31,15 +31,11 @@ export default function SmoothScroll() {
   useEffect(() => {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const coarse = matchMedia("(pointer: coarse)").matches;
-    const syncTouch = !reduced && matchMedia("(any-pointer: coarse)").matches;
     const wheelStepLimit = coarse ? 46 : 140;
-    let touchStart = 0;
-    let touchTravelLimit = 0;
     const lenis = new Lenis({
       autoRaf: false,
       smoothWheel: !reduced,
-      syncTouch,
-      touchMultiplier: 1.55,
+      syncTouch: false,
       allowNestedScroll: true,
       lerp: .075,
       anchors: true,
@@ -47,21 +43,6 @@ export default function SmoothScroll() {
         const { event, deltaY } = data;
         if (event.type === "wheel") {
           data.deltaY = Math.max(-wheelStepLimit, Math.min(wheelStepLimit, deltaY));
-        } else if (syncTouch && event.type === "touchstart") {
-          touchStart = lenis.actualScroll;
-          touchTravelLimit = Math.round(window.innerHeight * .85);
-        } else if (syncTouch && event.type === "touchmove" && deltaY !== 0) {
-          // Measure from where the swipe started so changing direction still works at the limit.
-          const direction = Math.sign(deltaY);
-          const traveled = (lenis.targetScroll - touchStart) * direction;
-          const remaining = Math.max(0, touchTravelLimit - traveled);
-          data.deltaY = direction * Math.min(Math.abs(deltaY), 76, remaining);
-          // Lenis ignores zero deltas. Keep the browser from taking over at the limit.
-          if (remaining === 0 && event.cancelable) event.preventDefault();
-        } else if (syncTouch && event.type === "touchend") {
-          // Lenis computes release inertia after this hook, so a delta cap alone can't bound it.
-          data.deltaX = 0;
-          data.deltaY = 0;
         }
         return true;
       },

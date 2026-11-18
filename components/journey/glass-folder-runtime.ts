@@ -113,7 +113,7 @@ export async function mountScene({canvas, section, signal, quality, onActive}: S
     mist: sectionStyle.getPropertyValue("--jny-chapter-mist").trim(),
     sky: sectionStyle.getPropertyValue("--jny-chapter-sky").trim(),
   };
-  const renderer = new THREE.WebGLRenderer({canvas, antialias: quality.tier !== "low", alpha: true, powerPreference: "high-performance"});
+  const renderer = new THREE.WebGLRenderer({canvas, antialias: quality.tier !== "low", alpha: true, powerPreference: quality.tier === "low" ? "low-power" : "high-performance"});
   scope.defer(() => renderer.dispose());
   renderer.outputColorSpace = THREE.SRGBColorSpace;renderer.toneMapping = THREE.ACESFilmicToneMapping;renderer.toneMappingExposure = 1.15;
   renderer.setClearColor(0xffffff, 0);

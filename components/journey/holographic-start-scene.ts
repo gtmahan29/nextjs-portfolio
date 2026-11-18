@@ -8,9 +8,13 @@ import { createStartMotion } from "./hero-start-motion";
 import { createSpring } from "./motion-curve";
 import { play } from "./sfx";
 import { reportLoad } from "./page-loader";
+import { getSceneQuality, scenePixelRatio } from "./scene-quality";
 
 export async function mountStartScene(host: HTMLDivElement, onReady: () => void) {
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha:true });
+  const quality = getSceneQuality();
+  const lowPower = quality.tier === "low";
+  const powerPreference = lowPower ? "low-power" : "default";
+  const renderer = new THREE.WebGLRenderer({ antialias: quality.antialias, alpha:true, powerPreference });
   renderer.autoClear=false;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
@@ -73,7 +77,8 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
   scene.add(new THREE.HemisphereLight(0xffffff, 0xb8b4d6, .65));
   const key = new THREE.DirectionalLight(0xffffff, 2.5);
   key.position.set(-3, 8, 4);
-  key.shadow.mapSize.set(1024, 1024);
+  const shadowSize = lowPower ? quality.shadows : 1024;
+  key.shadow.mapSize.set(shadowSize, shadowSize);
   key.shadow.camera.left = -5; key.shadow.camera.right = 5;
   key.shadow.camera.top = 5; key.shadow.camera.bottom = -5;
   key.shadow.bias = -.001; key.shadow.normalBias = .025; key.shadow.radius = 5;
@@ -92,7 +97,7 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
   const press = new THREE.Group(); pivot.add(press);
   const clouds=await createHeroClouds();
   reportLoad("sky",1);
-  const cloudRenderer=new THREE.WebGLRenderer({antialias:false,alpha:false});
+  const cloudRenderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference});
   cloudRenderer.domElement.className="hero-start-cloud-canvas";
   cloudRenderer.domElement.setAttribute("aria-hidden","true");
   renderer.domElement.className="hero-start-product-canvas";
@@ -112,11 +117,12 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
   let alive = true, frame = 0, visible = true, targetX = 0, targetY = 0;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const resize = () => {
+    if (lowPower && !visible) return;
     const width=host.clientWidth, height=host.clientHeight;
     // Bound fill rate on large/retina displays instead of scaling cost with DPR squared.
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2,Math.sqrt(4000000/(width*height))));
+    renderer.setPixelRatio(lowPower ? scenePixelRatio(quality,width,height,devicePixelRatio) : Math.min(devicePixelRatio,2,Math.sqrt(4000000/(width*height))));
     renderer.setSize(width,height);
-    const cloudScale=Math.min(1.25,Math.sqrt(1800000/(width*height)));
+    const cloudScale=Math.min(lowPower ? 1 : 1.25,Math.sqrt((lowPower ? quality.maxPixels : 1800000)/(width*height)));
     cloudRenderer.setPixelRatio(cloudScale); cloudRenderer.setSize(width,height);
     cloudDirty=true;
     camera.aspect=width/height;
@@ -133,7 +139,19 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
     cancelAnimationFrame(frame); frame=0;
     if(alive && visible && !document.hidden && !isCaseStudyOpen()) frame=requestAnimationFrame(animate);
   };
-  const visibility = new IntersectionObserver(([entry]) => { visible=entry.isIntersecting; syncRendering(); }); visibility.observe(host);
+  const visibility = new IntersectionObserver(([entry]) => {
+    const wasVisible = visible;
+    visible = entry.isIntersecting;
+    if (lowPower && visible !== wasVisible) {
+      if (visible) resize();
+      else {
+        renderer.setSize(1,1,false);
+        cloudRenderer.setSize(1,1,false);
+      }
+    }
+    syncRendering();
+  });
+  visibility.observe(host);
   document.addEventListener("visibilitychange",syncRendering);
   window.addEventListener(CASE_VISIBILITY_EVENT,syncRendering);
   const move = (event: PointerEvent) => {

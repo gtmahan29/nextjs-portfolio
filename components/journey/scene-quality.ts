@@ -11,17 +11,19 @@ export const SCENE_QUALITY: Record<SceneTier,SceneQuality> = {
 };
 export function chooseSceneTier(hints:{memory?:number;cores?:number;coarse:boolean;small:boolean;saveData?:boolean;slowNetwork?:boolean}, override?:string|null):SceneTier {
   if(override==="low"||override==="balanced"||override==="high")return override;
-  if(hints.saveData||hints.slowNetwork||(hints.memory??8)<=4||(hints.cores??8)<=4)return "low";
+  if((hints.coarse&&hints.small)||hints.saveData||hints.slowNetwork||(hints.memory??8)<=4||(hints.cores??8)<=4)return "low";
   // Keep a stable interactive budget; high is an explicit review override.
   return "balanced";
 }
 export function getSceneQuality():SceneQuality {
   const n=navigator as Navigator&{deviceMemory?:number;connection?:{saveData?:boolean;effectiveType?:string}};
   const query=new URLSearchParams(location.search);
+  const coarse=matchMedia("(any-pointer: coarse)").matches,small=innerWidth<=860;
   const tier=chooseSceneTier({memory:n.deviceMemory,cores:n.hardwareConcurrency,
-    coarse:matchMedia("(pointer: coarse)").matches,small:innerWidth<860,
+    coarse,small,
     saveData:n.connection?.saveData,slowNetwork:/^(slow-)?2g$/.test(n.connection?.effectiveType??"")},query.get("sceneQuality")??query.get("journeyQuality"));
-  return {...SCENE_QUALITY[tier]};
+  const quality=SCENE_QUALITY[tier];
+  return {...quality,antialias:quality.antialias&&!(coarse&&small&&tier==="low")};
 }
 export function scenePixelRatio(quality:SceneQuality,width:number,height:number,dpr:number) {
   // Preserve native CSS resolution through 1080p; trim expensive effects first.

@@ -22,7 +22,7 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
  try{
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   // Transparent canvas: the giant service word sits behind the mockup in the DOM.
-  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'});renderer.setClearColor(0x000000,0);
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:quality.antialias,alpha:true,powerPreference:quality.tier==='low'?'low-power':'high-performance'});renderer.setClearColor(0x000000,0);
   scope.defer(()=>renderer.dispose());renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
   const irradiance=await loadSceneTexture(quality.tier==='low'?assets.irradiance418.url:assets.irradiance836.url,signal);
   scope.defer(()=>irradiance.dispose());

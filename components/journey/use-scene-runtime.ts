@@ -15,7 +15,7 @@ export function useSceneRuntime(sectionRef:RefObject<HTMLElement>,canvasRef:RefO
     let near=false,controller:AbortController|undefined,cleanup:SceneCleanup|undefined,disposed=false;
     let retry=0,staticFailed=false,failed=false;
     const params=new URLSearchParams(location.search),staticMode=params.get("sceneQuality")==="static";
-    // The hero owns startup GPU work. Later scenes warm up only on approach.
+    const warmOffscreen=!matchMedia("(any-pointer: coarse) and (max-width: 860px)").matches;
     const reviewNear=section.id==='journey'
       ? params.has("unlockReview")||params.has("journeyReview")
       : section.id==='studio' ? params.has("studioReview") : false;
@@ -48,11 +48,10 @@ export function useSceneRuntime(sectionRef:RefObject<HTMLElement>,canvasRef:RefO
           cleanup=releaseRuntime;section.dataset.sceneState="ready";latest.current.onReady?.();window.dispatchEvent(new Event('journey-scene-status'));
         }).catch(error=>{if(!own.signal.aborted&&!disposed){console.warn("3D scene unavailable",error);fail();}});
     };
-    // After the page loader leaves, every scene builds in the background (one at a time, through
-    // the setup queue), so nobody scrolls into a scene that is still loading.
-    const warmed=()=>(window as unknown as {__sceneWarm?:boolean}).__sceneWarm===true;
+    // Avoid filling the GPU with offscreen scenes during startup on phones.
+    const warmed=()=>warmOffscreen&&(window as unknown as {__sceneWarm?:boolean}).__sceneWarm===true;
     const warm=()=>{near=true;start();};
-    window.addEventListener('scene-warm',warm);
+    if(warmOffscreen)window.addEventListener('scene-warm',warm);
     const observer=new IntersectionObserver(([entry])=>{
       near=reviewNear||warmed()||entry.isIntersecting;
       // The long journey is frequently revisited. Suspend its render loop offscreen
