@@ -54,9 +54,7 @@
 }
 
 /* =====================================================================
-   What are you building? One sculpted object, three forms.
-   Four slabs in real CSS 3D: a twisting tower (a product build), one
-   navy block (a focused launch), or an orbit (an ongoing partner).
+   What are you building? The selected scope plays in the card deck.
    ===================================================================== */
 .jny-root .jny-chapters .jc-pricing { background: linear-gradient(180deg, var(--jny-chapter-sky) 0%, #e3ebf3 40%, var(--jny-chapter-mist) 100%); }
 .jp-layout {
@@ -103,15 +101,16 @@
 .jny-root .jny-chapters .jny-arrow-link { background: var(--k-ink); color: #f3f6fb; padding: 7px 7px 7px 26px; font-size: 15.5px; }
 .jny-root .jny-chapters .jny-arrow-link .ic { width: 42px; height: 42px; background: #f3f6fb; color: var(--k-ink); }
 
-/* the object */
 .jp-scene {
   position: relative;
   display: grid;
   place-items: center;
   height: clamp(420px, 66svh, 680px);
+  pointer-events: none;
   perspective: 1600px;
   perspective-origin: 50% 30%;
 }
+.jp-scene .sd-stage { width: min(100%, 62svh); }
 .jp-floor {
   position: absolute;
   left: 50%;
@@ -463,13 +462,14 @@
 
 /* ---------- phones ---------- */
 @media (max-width: 860px) {
-  /* Phones: title, then the object, then the choices. */
-  .jp-layout { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 8px; }
+  /* Give the deck its own row sized by its square stage. */
+  .jp-layout { grid-template-columns: minmax(0, 1fr); width: min(100%, 520px); min-height: 0; gap: 0; }
   .jp-side { display: contents; }
-  .jp-layout .jc-h2 { order: 1; }
-  .jp-scene { order: 2; height: 330px; }
-  .jp-world { --sw: min(40vw, 170px); }
-  .jp-options { order: 3; margin-top: 0; }
+  .jny-root .jny-chapters .jp-layout .jc-h2 { order: 1; font-size: clamp(34px, 9vw, 58px); }
+  .jp-scene { order: 2; height: auto; padding-block: 8px; overflow: clip; }
+  .jp-scene .sd-stage { width: min(100%, 58svh, 410px); }
+  .jp-options { order: 3; width: 100%; margin-top: 0; }
+  .jny-root .jp-option { min-height: 48px; padding: 12px 16px; font-size: clamp(17px, 3vw, 22px); }
   .jp-lines { order: 4; }
   .jq-layout, .jk-layout { grid-template-columns: minmax(0, 1fr); min-height: 0; }
   /* Phones: the conversation sits right under the title, the questions below it. */
@@ -487,5 +487,3 @@
   .jk-shell { border-radius: 37px; }
   .jny-root .jny-chapters .jc-contact { padding-top: clamp(200px, 30svh, 300px); }
 }
-
-.jp-scene .sd-stage { width: min(100%, 62svh); }
