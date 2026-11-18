@@ -1456,7 +1456,14 @@ ul.jny-assure { list-style: none; display: grid; grid-template-columns: repeat(3
   .jny-mark { width: 26px; height: 26px; }
   .jny-steps .jny-step .jny-eye { padding-left: 38px; }
   .jny-step .jny-b h3 { font-size: clamp(23px, 6.2vw, 30px); margin-bottom: 10px; }
-  .jny-step .jny-ans { font-size: 14px; }
+  /* Phones keep the question, the deliverable and the rail; the explanation stays on desktop. */
+  .jny-step .jny-ans { display: none; }
+  /* A paper wash rises behind the copy so it reads over the props passing underneath. */
+  .jny-steps::before { content: ""; position: absolute; z-index: -1; left: -16px; right: -16px; top: -56px; bottom: -18px; pointer-events: none;
+    background: linear-gradient(to bottom, rgba(232, 236, 242, 0), rgba(232, 236, 242, .86) 34%, rgba(232, 236, 242, .94));
+    transform-origin: 50% 100%; transform: scaleY(0); transition: transform 1s var(--ease-spring, cubic-bezier(0.34, 1.4, 0.64, 1)); }
+  .jny-steps.jny-on::before { transform: none; }
+  .jny-steps.jny-off::before { transform: scaleY(0); }
   .jny-step .jny-out { margin-top: 14px; padding-top: 12px; }
   .jny-out-val { font-size: 14px; }
   .jny-tools { display: none; }

@@ -192,7 +192,10 @@ export function createInk(renderer: THREE.WebGLRenderer, samples = 4) {
         float lap = abs(l + r - 2.0 * c0) + abs(t + b - 2.0 * c0);
         float e = smoothstep(uStep * 0.55, uStep * 1.6, lap);
         // The board's own outline against the paper is a touch heavier.
-        float bg = step(0.99999, max(max(l, r), max(t, b))) * step(c0, 0.99999);
+        // Coverage, not a hard step: one paper neighbour inks half, two or more ink fully,
+        // so the silhouette steps blend instead of reading as a pixel staircase.
+        float paper = step(0.99999, l) + step(0.99999, r) + step(0.99999, t) + step(0.99999, b);
+        float bg = clamp(paper * 0.5, 0.0, 1.0) * step(c0, 0.99999);
         e = max(e, bg);
         // Premultiplied "ink over scene", so the paper behind the canvas shows through.
         float k = e * 0.78;

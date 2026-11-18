@@ -66,7 +66,9 @@ export function createStackWorld(canvas: HTMLCanvasElement, pill: HTMLElement, n
     return { select() {}, show() {}, closeNote() {}, send() {}, dispose() {} };
   }
   // Desktop renders at least 1.5× and lets the browser downsample: the ink lines stay smooth on 1× screens.
-  const dpr = coarse ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(2, Math.max(1.5, window.devicePixelRatio || 1));
+  // Phones: this is the page's only scene, so it can afford a sharp canvas; low-memory devices stop at 2×.
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
+  const dpr = coarse ? Math.min(window.devicePixelRatio || 1, memory <= 4 ? 2 : 2.5) : Math.min(2, Math.max(1.5, window.devicePixelRatio || 1));
   renderer.setPixelRatio(dpr);
   renderer.setClearColor(0x000000, 0);
   renderer.shadowMap.enabled = true;
@@ -82,8 +84,8 @@ export function createStackWorld(canvas: HTMLCanvasElement, pill: HTMLElement, n
   const kit = new Kit();
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 18, 72);
-  // The ink pass keeps a multisampled half-float copy of the frame; phones take two samples, not four.
-  const ink = createInk(renderer, coarse ? 2 : 4);
+  // The ink pass keeps a multisampled half-float copy of the frame (four samples everywhere).
+  const ink = createInk(renderer, 4);
 
   // Light: a warm key from the back left (tops lit, left faces mid, right faces in shade),
   // and a cool sky so shadows stay coloured rather than grey.
@@ -99,7 +101,7 @@ export function createStackWorld(canvas: HTMLCanvasElement, pill: HTMLElement, n
   const sun = new THREE.DirectionalLight("#fff4e6", 2.5);
   sun.position.set(-5.5, 15, 8.5);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(coarse ? 1024 : 2048, coarse ? 1024 : 2048);
+  sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 });
   sun.shadow.bias = -0.0005;
   sun.shadow.normalBias = 0.025;

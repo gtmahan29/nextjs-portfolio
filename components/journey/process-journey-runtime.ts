@@ -72,6 +72,9 @@ const ROUTE: [number, number][] = ([
 const ST_INDEX = [0, 4, 10, 18, 22, 26];
 
 const CAMERA_DISTANCE = 142;
+// Phones: stations are framed this much closer than the old portrait framing, so the props read
+// at phone size; the station also rises into the space above the (shorter) copy.
+const PHONE_NEAR = .7, PHONE_STATION_LIFT = .07;
 const FINAL_FRAMING = createTravelTrack([[0, 0], [.74, 0], [.85, 1], [1, 1]]);
 const FIFTH_FRAMING = createTravelTrack([[0, 0], [.60, 0], [.70, 1], [1, 1]]);
 const TEST_CELL_FRAMING = createTravelTrack([[0, 0], [.51, 0], [.56, 1], [.60, 1], [.66, 0], [1, 0]]);
@@ -1112,12 +1115,12 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       const testCellFraming = TEST_CELL_FRAMING(pS);
       const capacityFraming = CAPACITY_FRAMING(pS);
       const launchFraming = LAUNCH_FRAMING(pS);
-      const standardDistance = THREE.MathUtils.lerp(CAMERA_DISTANCE * (mobile ? 1.3 : 1), mobile ? 174 : 138, fifthApproach);
-      const testCellDistance = THREE.MathUtils.lerp(standardDistance, mobile ? 157 : 118, testCellFraming);
-      const approachDistance = THREE.MathUtils.lerp(testCellDistance, mobile ? 184 : 128, capacityFraming);
+      const standardDistance = THREE.MathUtils.lerp(CAMERA_DISTANCE * (mobile ? 1.3 * PHONE_NEAR : 1), mobile ? 174 * PHONE_NEAR : 138, fifthApproach);
+      const testCellDistance = THREE.MathUtils.lerp(standardDistance, mobile ? 157 * PHONE_NEAR : 118, testCellFraming);
+      const approachDistance = THREE.MathUtils.lerp(testCellDistance, mobile ? 184 * PHONE_NEAR : 128, capacityFraming);
       const approachFov = THREE.MathUtils.lerp(mobile ? 32 : camera.aspect < 1.05 ? 26 : 20, mobile ? 25 : 18, fifthApproach);
-      const finalDistance = THREE.MathUtils.lerp(approachDistance, mobile ? 190 : 142, finalApproach);
-      const launchDistance = THREE.MathUtils.lerp(finalDistance, mobile ? 153 : 119, launchFraming);
+      const finalDistance = THREE.MathUtils.lerp(approachDistance, mobile ? 190 * PHONE_NEAR : 142, finalApproach);
+      const launchDistance = THREE.MathUtils.lerp(finalDistance, mobile ? 153 * PHONE_NEAR : 119, launchFraming);
       const journeyDistance = THREE.MathUtils.lerp(launchDistance, mobile ? 106 : 152, finaleFraming);
       const entryDistance = THREE.MathUtils.lerp(mobile ? 22 : 26,mobile ? 47 : 52,ENTRY_SPACE(entryP));
       const dist = Math.exp(THREE.MathUtils.lerp(Math.log(entryDistance), Math.log(journeyDistance), reveal)) * (1 + .1 * crane * reveal);
@@ -1130,7 +1133,7 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       const unlockCentering = 1 - sm(.01, .16, unlock);
       const viewX = mobile ? 0 : unlockCentering * (-.18 * (1-centering) - .12 * centering * (1 - THREE.MathUtils.clamp(roomOpen, 0, 1)) - .027 * testCellFraming - .022 * capacityFraming - .024 * launchFraming);
       const capacityLift = mobile ? (camera.aspect < .58 ? .22 : .18) : .11;
-      const viewY = unlockCentering * ((mobile ? -.2 : .08) * (1-centering) + (mobile ? .12 : .09) * testCellFraming + capacityLift * capacityFraming + (mobile ? .21 : .125) * launchFraming);
+      const viewY = unlockCentering * ((mobile ? -.2 : .08) * (1-centering) + (mobile ? PHONE_STATION_LIFT * centering * (1 - finaleFraming) * (1 - Math.max(testCellFraming, capacityFraming, launchFraming)) : 0) + (mobile ? .12 : .09) * testCellFraming + capacityLift * capacityFraming + (mobile ? .21 : .125) * launchFraming);
       const lensFov = desiredFov;
       if (entryP !== lastCameraEntry || Math.abs(camera.fov - lensFov) > .001 || Math.abs(viewX-lastViewX) > .00001 || Math.abs(viewY-lastViewY) > .00001) {
         lastCameraEntry = entryP; lastViewX = viewX; lastViewY = viewY;
