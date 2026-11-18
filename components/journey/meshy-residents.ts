@@ -13,6 +13,7 @@ import { cleanMeshySurface } from "./meshy-surface";
 import { anchorSeatedClip, fitSeatedSurface, type MeshySeatFit } from "./meshy-seat-fit";
 
 import { clearWalkSegment, freeWalkPoint, planWalk, walkObstacle, type WalkObstacle } from "./meshy-navigation";
+import { getSceneQuality } from "./scene-quality";
 
 type Profile = {
   asset: GLTF; bounds: THREE.Box3; walk?: THREE.AnimationClip; talk?: THREE.AnimationClip;
@@ -199,15 +200,20 @@ export function mountMeshyResidents(scene: THREE.Scene, sites: DistrictSite[], r
 
   async function load() {
     const loader = new GLTFLoader();
-    // Common uniforms first. Each file is fetched/decoded once, including for commuters.
+    // Common uniforms first. Each file is fetched/decoded once, and only if someone uses it.
+    // Phones and low-memory devices load the light variants (scripts/make-meshy-mobile.py):
+    // the three clips the scene plays and a 512 px colour map, instead of 5–25 MB files whose
+    // 4096 px textures alone can push iOS Safari over its memory limit.
+    const folder = getSceneQuality().tier === "low" ? "/3d-models-glb/mobile/" : "/3d-models-glb/";
     for (const index of [2, 0, 1, 4, 5, 3]) {
       if (disposed) return;
+      if (!layout.members.some(member => member.asset === index)) continue;
       const filename = MESHY_ASSETS[index].file;
       try {
-        const response = await fetch(`/3d-models-glb/${filename}`, { signal: controller.signal });
+        const response = await fetch(`${folder}${filename}`, { signal: controller.signal });
         if (!response.ok) throw new Error(`Character download HTTP ${response.status}`);
         const buffer = await response.arrayBuffer(); await yieldToMain(controller.signal);
-        const asset = await loader.parseAsync(buffer, "/3d-models-glb/");
+        const asset = await loader.parseAsync(buffer, folder);
         if (disposed) { disposeSceneResources(asset.scene); return; }
         sources.push(asset.scene);
         const profile = await createProfile(asset, index, options.anisotropy ?? 1,controller.signal);

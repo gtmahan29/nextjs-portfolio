@@ -13,16 +13,18 @@ export default function OpalKeyboard(){
  const host=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   const element=host.current;if(!element)return;const node:HTMLDivElement=element;
-  let disposed=false,cleanup:(()=>void)|undefined;
+  let disposed=false,gen=0,live=false,cleanup:(()=>void)|undefined;
   let latest:KeyboardFrame={angle:0,time:-1,demo:-1,reduced:false};
   let draw:((frame:KeyboardFrame)=>void)|undefined;
   const receive=(event:Event)=>{latest=(event as CustomEvent<KeyboardFrame>).detail;draw?.(latest);};
   node.addEventListener('iso-keyboard',receive);
   async function mount(){
+   // Each build has its own generation: a release mid-load leaves the stale build to dispose itself.
+   const mine=++gen,stale=()=>disposed||mine!==gen;
    const [THREE,{GLTFLoader},{createOpalKeyboardRig}]=await Promise.all([
     import('three'),import('three/examples/jsm/loaders/GLTFLoader.js'),import('./opal-keyboard-rig')
    ]);
-   if(disposed)return;
+   if(stale())return;
    // Phones share one memory pool between the page and the GPU: a lighter canvas and shadow there.
    const phone=matchMedia('(any-pointer: coarse) and (max-width: 860px)').matches;
    const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:phone?'default':'high-performance'});
@@ -76,7 +78,7 @@ export default function OpalKeyboard(){
    };
    let signature='',lastText='';
    draw=frame=>{
-    if(disposed||!model||!rig)return;
+    if(stale()||!model||!rig)return;
     const sig=[frame.angle.toFixed(4),frame.time.toFixed(4),frame.demo?.toFixed(4),JSON.stringify(frame.presses),frame.reduced,node.clientWidth,node.clientHeight].join(':');
     if(sig===signature)return;signature=sig;
     const a=Math.max(0,Math.min(1,frame.angle));
@@ -110,7 +112,7 @@ export default function OpalKeyboard(){
    resize();
    try{
     const gltf=await new GLTFLoader().loadAsync('/models/hero-keyboard/hero-keyboard-tight65.glb?v=soft-travel-13');
-    if(disposed){gltf.scene.traverse(object=>{if(object instanceof THREE.Mesh){object.geometry.dispose();(Array.isArray(object.material)?object.material:[object.material]).forEach(m=>m.dispose());}});return;}
+    if(stale()){gltf.scene.traverse(object=>{if(object instanceof THREE.Mesh){object.geometry.dispose();(Array.isArray(object.material)?object.material:[object.material]).forEach(m=>m.dispose());}});return;}
     model=gltf.scene;
     const styledMaterials=new Set<string>();
     const rgbEnabled={value:1},rgbFlow={value:0};
@@ -173,8 +175,20 @@ export default function OpalKeyboard(){
     node.dataset.modelReady='true';node.dataset.rgb='on';node.setAttribute('aria-busy','false');signature='';draw(latest);
    }catch(error){console.error('Blender keyboard:',error);node.dataset.loadError='true';}
   }
-  mount().catch(error=>console.error('Blender keyboard renderer:',error));
-  return()=>{disposed=true;draw=undefined;node.removeEventListener('iso-keyboard',receive);cleanup?.();};
+  const build=()=>{if(live||disposed)return;live=true;mount().catch(error=>console.error('Blender keyboard renderer:',error));};
+  const release=()=>{
+   if(!live)return;live=false;gen++;draw=undefined;cleanup?.();cleanup=undefined;
+   delete node.dataset.modelReady;node.setAttribute('aria-busy','true');
+  };
+  // Phones: the keyboard's canvas, shadow map and model hold about 80 MB of GPU memory. Like the
+  // hero around it, it gives that back once the visitor is three screens away and rebuilds within
+  // a screen and a half of coming back.
+  const onPhone=matchMedia('(any-pointer: coarse) and (max-width: 860px)').matches;
+  const anchor=node.closest<HTMLElement>('.hero-start')??node;
+  const near=onPhone?new IntersectionObserver(([entry])=>{if(entry.isIntersecting)build();},{rootMargin:`${innerHeight*1.5}px 0px`}):undefined;
+  const keeper=onPhone?new IntersectionObserver(([entry])=>{if(!entry.isIntersecting)release();},{rootMargin:`${innerHeight*3}px 0px`}):undefined;
+  if(near&&keeper){near.observe(anchor);keeper.observe(anchor);}else build();
+  return()=>{disposed=true;near?.disconnect();keeper?.disconnect();release();node.removeEventListener('iso-keyboard',receive);};
  },[]);
  return <div className="opal-keyboard-model" data-opal-keyboard="" role="img" aria-label="Opal mechanical keyboard, RGB lighting on" aria-busy="true" ref={host}/>;
 }

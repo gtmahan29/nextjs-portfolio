@@ -13,6 +13,7 @@ import assets from "./imported-models/asset-manifest.json";
 import {createLaptopTransfer} from "./laptop-transfer";
 import {createCameraProgress} from "./camera-motion";
 import {createSpring,SPRING_PEAK} from "./motion-curve";
+import {createBeatGovernor} from "./beat-governor";
 import {play} from "./sfx";
 import {CASE_VISIBILITY_EVENT,isCaseStudyOpen} from "./case-scene-visibility";
 
@@ -28,6 +29,9 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
   scope.defer(()=>irradiance.dispose());
   const baked=await loadShowroomAssets(signal,irradiance,quality.tier!=='high');
   const world=await createLumenShowroom(renderer,{quality,signal,irradiance,bakedRooms:baked.rooms});scope.defer(world.dispose);
+  // Phones: a longer lens than the old 48° fills the width with the device and makes its screen
+  // readable; the platform drops less, so the device sits mid-screen above the copy.
+  const PHONE_FOV=35,PHONE_DROP=.15;
   const camera=new THREE.PerspectiveCamera(LUMEN_CAMERA.fov,1,.1,160);
   const turntable=world.turntable as THREE.Group;
   const assemblies=world.assemblies as THREE.Group[];
@@ -76,11 +80,14 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
    const ratio=scenePixelRatio(quality,width,height,devicePixelRatio);
    const old=renderer.getSize(new THREE.Vector2());
    if(old.x!==width||old.y!==height||renderer.getPixelRatio()!==ratio){renderer.setPixelRatio(ratio);renderer.setSize(width,height,false);}
-   camera.aspect=width/height;camera.fov=width<700?48:LUMEN_CAMERA.fov;camera.updateProjectionMatrix();measure();request();
+   camera.aspect=width/height;camera.fov=width<700?PHONE_FOV:LUMEN_CAMERA.fov;camera.updateProjectionMatrix();measure();request();
   }
   /** Where scroll calls in the next service. Everything else is timed by the spring. */
   const STAGE_AT=[.26,.6];
   const stageOf=(p:number)=>p<STAGE_AT[0]?0:p<STAGE_AT[1]?1:2;
+  // A quick flick plays the slide it skipped (the phone between the two laptops) while the
+  // showroom is pinned, instead of jumping straight from the first device to the last.
+  const slides=createBeatGovernor({last:2,dwell:.95,minDwell:.8});
   /** A new service waits this long, so the outgoing one is already shrinking when it pops in. */
   const HANDOVER=.12;
   const devices=baked.devices.map((_,i)=>createSpring(i===0?1:0));
@@ -97,8 +104,9 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
    clock+=dt;
    // Until the laptop has landed, the copy waits behind its masks.
    const ready=handoffPosition>=.999;
-   const stage=stageOf(p);
-   let moving=false;
+   const pinned=ready&&scrollY>=top-1&&scrollY<=top+span+1;
+   const stage=slides.step(stageOf(p),dt,pinned,reduced);
+   let moving=slides.pending;
    if(stage!==active){
     const first=active<0;active=stage;onActive?.(stage);
     // The pop is heard at the top of the overshoot, the moment the platform is caught.
@@ -156,7 +164,7 @@ export async function mountScene({canvas,section:hall,signal,quality,onActive,on
    const mobile=width<700;
    const animating=pose(p,springDt,mobile);
    // The mockup stays centred, in front of the giant word. On phones it settles a little lower.
-   const baseY=-1.6*lower.value;
+   const baseY=-PHONE_DROP*lower.value;
    turntable.position.set(world.podium.x,baseY,world.podium.z);
    turntable.rotation.set(0,0,0);turntable.visible=true;
    assemblies.forEach((assembly,i)=>{if(i>0){assembly.position.copy(turntable.position);assembly.visible=false;}});

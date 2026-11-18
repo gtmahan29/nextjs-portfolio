@@ -776,8 +776,15 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     ]);
     const jumpToProgress = (progress: number) =>
       smoothScrollTo(sectionTop + entrySpan + scrollSpan * storyToScroll(progress));
+    // Station stops: a fast flick that skips stations brings the camera to each skipped one in
+    // turn (a short hold, then on), as long as the stations are on screen. The dock jumps straight.
+    const STOPS = FOCUS.map((f, i) => i === 5 ? LAUNCH_ENTRY : f);
+    const nearestStation = (value: number) => FOCUS.reduce((best, f, i) => Math.abs(value - f) < Math.abs(value - FOCUS[best]) ? i : best, 0);
+    const stationStops = createBeatGovernor({ last: FOCUS.length - 1, dwell: 1.05, minDwell: .85, budget: 2.7, replay: 3 });
+    let stationJumpUntil = 0;
     const jump = (i: number) => (ev: Event) => {
       ev.preventDefault();
+      stationJumpUntil = performance.now() + 1600;
       jumpToProgress(i === 5 ? LAUNCH_ENTRY : FOCUS[i]);
     };
     const jumpers = stepEls.map((_, i) => jump(i));
@@ -894,7 +901,12 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       last = now;
       time += dt;
 
-      const p = progress();
+      const rawP = progress();
+      // Hold the camera on a skipped station until it has been seen (see STOPS above).
+      const pickedStation = nearestStation(rawP);
+      const stationsLive = !reduce && now > stationJumpUntil && entryProgress() >= .999 && rawP >= FOCUS[0] - .04 && rawP <= FOCUS[5] + .03;
+      const heldStation = stationStops.step(pickedStation, springDt, stationsLive, reduce);
+      const p = heldStation === pickedStation ? rawP : STOPS[heldStation];
       const immediate=reduce||snapOnNextFrame;
       previousScrollY=scrollY;
       // The route fills with the scroll, continuously. A heavier, critically damped follower
