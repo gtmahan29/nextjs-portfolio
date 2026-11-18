@@ -38,9 +38,9 @@ export function useSceneRuntime(sectionRef:RefObject<HTMLElement>,canvasRef:RefO
       // Reserve the setup slot before the import so the archive and later background
       // work cannot overtake the showroom while the process scene is still preparing.
       void queueSceneSetup(own.signal,async()=>{
-        const module=await load();
+        const {mountScene}=await load();
         own.signal.throwIfAborted();
-        return module.mountScene({canvas,section,signal:own.signal,quality:getSceneQuality(),
+        return mountScene({canvas,section,signal:own.signal,quality:getSceneQuality(),
           onActive:i=>latest.current.onActive?.(i),onAudit:value=>latest.current.onAudit?.(value)});
       })
         .then(releaseRuntime=>{
