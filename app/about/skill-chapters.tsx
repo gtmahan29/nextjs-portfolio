@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { createSpring, SPRING_PEAK } from "@/components/journey/motion-curve";
 import { createStagedMotion, BEFORE } from "@/components/journey/staged-motion";
+import { createBeatGovernor } from "@/components/journey/beat-governor";
 import { createCapsule } from "@/components/journey/spring-ticker";
 import { Rise, Words, pop } from "@/components/journey/staged-words";
 import { smoothScrollTo } from "@/components/smooth-scroll";
@@ -25,6 +26,8 @@ gsap.registerPlugin(ScrollTrigger);
 MOTION SCORE — skill chapters
 Trigger: scroll-pinned beats (GSAP ScrollTrigger reads the progress; it only picks the beat).
 Section height: 100svh + 6 × 80svh. Beats: chapter k from progress k / 7.
+Fast scroll: a beat governor plays skipped chapters in order while the stage is pinned
+(.62 s each, ≥ .38 s when further behind, at most 3 replayed); a rail click jumps straight there.
 
 | Beat | Element             | Pattern | Goal                                          | Delay (s)            | Exit       | Sound             |
 |------|---------------------|---------|-----------------------------------------------|----------------------|------------|-------------------|
@@ -71,7 +74,8 @@ export default function SkillChapters() {
     const frames = panels.map(() => ({ x: createSpring(0), y: createSpring(0), w: createSpring(0), h: createSpring(0), s: createSpring(0), placed: false }));
     const wires = paths.map(() => ({ p: createSpring(0), ids: null as [string, string] | null }));
     let progress = 0, beat = BEFORE, changedAt = 0, clock = 0, W = 600, H = 540, lastStep = "";
-    let raf = 0, last = 0, visible = false;
+    let raf = 0, last = 0, visible = false, jumpUntil = 0;
+    const governor = createBeatGovernor({ last: K - 1 });
 
     // GSAP owns the scroll reading: the trigger reports where in the pinned stretch we are.
     const st = ScrollTrigger.create({
@@ -134,7 +138,10 @@ export default function SkillChapters() {
       last = now; clock += dt;
       const still = reduce.matches;
       const top = el.getBoundingClientRect().top;
-      const next = top > innerHeight * 0.5 ? BEFORE : Math.min(K - 1, Math.floor(progress * K + 1e-4));
+      const picked = top > innerHeight * 0.5 ? BEFORE : Math.min(K - 1, Math.floor(progress * K + 1e-4));
+      // A fast flick plays the chapters it skipped, in order, while the stage is still pinned.
+      const pinned = top <= 1 && el.getBoundingClientRect().bottom >= innerHeight - 1;
+      const next = governor.step(picked, dt, pinned && now > jumpUntil, still);
       if (next !== beat) {
         const forward = next > beat;
         beat = next; changedAt = clock; lastStep = "";
@@ -217,6 +224,7 @@ export default function SkillChapters() {
     // The rail jumps to the middle of a chapter's stretch.
     const onTab = (e: Event) => {
       const i = tabs.indexOf(e.currentTarget as HTMLElement);
+      jumpUntil = performance.now() + 1400;
       smoothScrollTo(st.start + (st.end - st.start) * ((i + 0.5) / K));
     };
     tabs.forEach(t => t.addEventListener("click", onTab));

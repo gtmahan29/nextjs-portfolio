@@ -5,6 +5,7 @@ import { IconArrowDownRight, IconBook2, IconBrush, IconCode, IconKey, IconWorld 
 import { PRINCIPLES } from "./data";
 import { createSpring, SPRING_PEAK } from "./motion-curve";
 import { createStagedMotion, BEFORE } from "./staged-motion";
+import { createBeatGovernor } from "./beat-governor";
 import { Rise, Words } from "./staged-words";
 import { play } from "./sfx";
 import "./method-scene.css";
@@ -113,6 +114,8 @@ export default function MethodScene() {
       return [x * k, y * k];
     };
 
+    // A fast flick plays the beats it skipped, in order, while the scene is pinned.
+    const governor = createBeatGovernor({ last: BEAT_AT.length });
     let beat = BEFORE, started = false, phase = 0, last = performance.now(), raf = 0, visible = false;
     const written = new WeakMap<Element, Record<string, string>>();
     const write = (node: HTMLElement, prop: "transform" | "width" | "height", value: string) => {
@@ -137,6 +140,7 @@ export default function MethodScene() {
 
       let next = rect.top < innerHeight * 0.5 ? 0 : BEFORE;
       if (next === 0) BEAT_AT.forEach((at, i) => { if (p >= at) next = i + 1; });
+      next = governor.step(next, dt, rect.top <= 1 && rect.bottom >= innerHeight - 1, reduced);
       if (next !== beat) {
         const forward = next > beat;
         // One sound per beat, on the first catch. The line is plucked when the chain changes.

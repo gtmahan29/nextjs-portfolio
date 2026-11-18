@@ -5,7 +5,7 @@ export type SceneQuality = {
   reflectionSize: number; textureSize: number; antialias: boolean;
 };
 export const SCENE_QUALITY: Record<SceneTier,SceneQuality> = {
-  low: {tier:"low",pixelRatio:1.5,maxPixels:1_200_000,fps:30,shadows:512,shadowHz:10,reflections:0,reflectionSize:256,textureSize:512,antialias:true},
+  low: {tier:"low",pixelRatio:1.5,maxPixels:1_200_000,fps:30,shadows:1024,shadowHz:10,reflections:0,reflectionSize:256,textureSize:512,antialias:true},
   balanced: {tier:"balanced",pixelRatio:2,maxPixels:2_400_000,fps:60,shadows:1024,shadowHz:15,reflections:1,reflectionSize:512,textureSize:1024,antialias:true},
   high: {tier:"high",pixelRatio:2,maxPixels:4_000_000,fps:60,shadows:2048,shadowHz:20,reflections:1,reflectionSize:768,textureSize:1200,antialias:true},
 };
@@ -22,8 +22,9 @@ export function getSceneQuality():SceneQuality {
   const tier=chooseSceneTier({memory:n.deviceMemory,cores:n.hardwareConcurrency,
     coarse,small,
     saveData:n.connection?.saveData,slowNetwork:/^(slow-)?2g$/.test(n.connection?.effectiveType??"")},query.get("sceneQuality")??query.get("journeyQuality"));
-  const quality=SCENE_QUALITY[tier];
-  return {...quality,antialias:quality.antialias&&!(coarse&&small&&tier==="low")};
+  // Phones keep multisampling: at 1.5x on a 3x screen every missing edge sample is magnified
+  // into a visible stair, and Apple's tile GPUs resolve MSAA on chip, so it costs little time.
+  return {...SCENE_QUALITY[tier]};
 }
 export function scenePixelRatio(quality:SceneQuality,width:number,height:number,dpr:number) {
   // Preserve native CSS resolution through 1080p; trim expensive effects first.

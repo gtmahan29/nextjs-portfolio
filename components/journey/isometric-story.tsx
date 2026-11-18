@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import OpalKeyboard from "./opal-keyboard";
 import { createStagedMotion, BEFORE } from "./staged-motion";
+import { createBeatGovernor } from "./beat-governor";
 import { Words, pop } from "./staged-words";
 import { SPRING_PEAK, springCurve } from "./motion-curve";
 import { play } from "./sfx";
@@ -183,6 +184,7 @@ export default function IsometricStory() {
     const opal = keyboard.querySelector<HTMLElement>("[data-opal-keyboard]");
     const curveDot = host.querySelector<SVGCircleElement>(".bs-curve-dot");
     const motion = createStagedMotion(Array.from(host.querySelectorAll<HTMLElement>("[data-beat]")), { lag: 0.16 });
+    const governor = createBeatGovernor({ last: BEAT_AT.length - 1 });
     let beat = BEFORE, last = performance.now(), beatAt = 0, typed = "", demoKey = -1, hidden = true;
 
     // The keyboard reports every letter it has actually pressed; the page shows exactly those.
@@ -202,12 +204,14 @@ export default function IsometricStory() {
       const now = performance.now(), dt = Math.min(0.25, (now - last) / 1000); last = now;
       if (!visible) {
         // Off stage: put every element back where it waits, so the next visit starts from nothing.
+        governor.step(BEFORE, 0, false, true);
         if (!hidden) { hidden = true; host.style.visibility = "hidden"; beat = BEFORE; motion.update(BEFORE, 0, true); typed = ""; headline.textContent = ""; }
         return;
       }
       if (hidden) { hidden = false; host.style.visibility = ""; }
       const p = reduced ? 1 : clamp((units - 2.12) / 3.02), entry = ease(p / 0.15);
-      const next = beatOf(p);
+      // A fast flick plays the skipped beats in order instead of snapping past them.
+      const next = governor.step(beatOf(p), dt, true, reduced);
       if (next !== beat) {
         // Beat 2 is heard through the typing itself.
         if (next > beat && next >= 0 && !reduced) play("ui_pop", 0.16 + SPRING_PEAK);

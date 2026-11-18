@@ -16,6 +16,7 @@ import { LAUNCH_ENTRY, launchBeatAt } from "./launch-story";
 import { mountMeshyResidents } from "./meshy-residents";
 import {smoothScrollTo} from "@/components/smooth-scroll";
 import { createStagedMotion, BEFORE, AFTER } from "./staged-motion";
+import { createBeatGovernor } from "./beat-governor";
 import { createSpring, SPRING_PEAK } from "./motion-curve";
 import { play } from "./sfx";
 import { glyphPath } from "./stage-glyphs";
@@ -811,6 +812,7 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
     // The dark room opens on a spring; the cube turns a quarter per beat and is
     // squeezed by a kick, so it zooms out and back in as each sentence lands.
     const room=createSpring(0),cubeYaw=createSpring(0),cubePop=createSpring(0);
+    const cubeGovernor=createBeatGovernor({last:CUBE_BEATS-1});
     let finaleRest=0,cubeBeat=BEFORE,stepBeat=BEFORE,cubeX=-1,cubeY=-1,cubeR=-1;
     const cubeCenter=new THREE.Vector3(),cubeEdge=new THREE.Vector3(),cameraRight=new THREE.Vector3();
     // Each altar's floating cube is small while the camera is away and pops when it arrives.
@@ -926,8 +928,10 @@ export async function mountScene({canvas,section,signal,quality}:SceneContext) {
       (scene.background as THREE.Color).copy(BG).lerp(PAPER, doorway);
       conversationField.material.uniforms.aspect.value = camera.aspect;
       // Scroll picks the sentence; springs move the words and the cube.
-      const nextCubeBeat = unlock > .015 ? AFTER : handoff < .6 ? BEFORE
+      const pickedCubeBeat = unlock > .015 ? AFTER : handoff < .6 ? BEFORE
         : Math.min(CUBE_BEATS - 1, Math.floor(THREE.MathUtils.clamp((rawConversation - .14) / .86, 0, .999) * CUBE_BEATS));
+      // A fast flick plays the sentences it skipped, in order, while the cube is on stage.
+      const nextCubeBeat = cubeGovernor.step(pickedCubeBeat, springDt, true, reduce);
       if (nextCubeBeat !== cubeBeat) {
         const arriving = nextCubeBeat >= 0 && nextCubeBeat < AFTER;
         cubeBeat = nextCubeBeat;
