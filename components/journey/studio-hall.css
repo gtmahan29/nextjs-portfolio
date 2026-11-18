@@ -28,6 +28,17 @@
   color: var(--svc-ink);
 }
 .st-hall[data-single-laptop] .lumen-stage > canvas { z-index: 1; }
+.st-hall .svc-preview-status {
+  display: none;
+  position: absolute;
+  top: 55%;
+  left: var(--svc-edge);
+  right: var(--svc-edge);
+  color: var(--svc-ink);
+  text-align: center;
+  font-size: 14px;
+}
+.st-hall[data-scene-state="loading"]:not([data-scene-rendered="true"]) .svc-preview-status { display: block; }
 
 /* ---------- masks ---------- */
 .svc-m {
@@ -132,6 +143,7 @@
   pointer-events: none;
 }
 .svc-panel[data-current="true"] { visibility: visible; }
+.st-hall:not([data-scene-rendered="true"]) .svc-panel[data-service="0"] { visibility: visible; }
 .svc-story { display: flex; flex-direction: column; gap: clamp(12px, 2svh, 20px); max-width: min(38%, 540px); }
 .st-hall .svc-story h3,
 .st-hall .svc-story p { margin: -0.1em -0.06em -0.16em; }
@@ -221,6 +233,7 @@
 
 /* ---------- reduced motion and the static fallback: one readable list ---------- */
 @media (prefers-reduced-motion: reduce) {
+  .st-hall[data-scene-state="loading"] .svc-preview-status { display: none; }
   .svc-panel { position: relative; inset: auto; flex-direction: column; align-items: flex-start; margin: 0 0 48px; visibility: visible; }
   .svc-giant, .svc-count { display: none; }
   .svc-in, .st-hall .svc-go { transform: none !important; }

@@ -32,15 +32,17 @@ export function useSceneRuntime(sectionRef:RefObject<HTMLElement>,canvasRef:RefO
     };
     const start=()=>{
       if(disposed||failed||!near||document.hidden||controller)return;
-      // The first journey frame takes priority over the later showroom warmup.
-      const first=document.getElementById('journey');
-      if(section.id==='studio'&&first&&!['ready','unavailable'].includes(first.dataset.sceneState??''))return;
       if(staticMode){if(!staticFailed){staticFailed=true;fail();}return;}
       controller=new AbortController();const own=controller;
       section.dataset.sceneState="loading";section.classList.remove("jny-static");
-      // Import on approach, then stagger heavy CPU/GPU setup behind the first paint.
-      void load().then(module=>queueSceneSetup(own.signal,()=>module.mountScene({canvas,section,signal:own.signal,quality:getSceneQuality(),
-        onActive:i=>latest.current.onActive?.(i),onAudit:value=>latest.current.onAudit?.(value)})))
+      // Reserve the setup slot before the import so the archive and later background
+      // work cannot overtake the showroom while the process scene is still preparing.
+      void queueSceneSetup(own.signal,async()=>{
+        const module=await load();
+        own.signal.throwIfAborted();
+        return module.mountScene({canvas,section,signal:own.signal,quality:getSceneQuality(),
+          onActive:i=>latest.current.onActive?.(i),onAudit:value=>latest.current.onAudit?.(value)});
+      })
         .then(releaseRuntime=>{
           if(disposed||own.signal.aborted){releaseRuntime();return;}
           cleanup=releaseRuntime;section.dataset.sceneState="ready";latest.current.onReady?.();window.dispatchEvent(new Event('journey-scene-status'));
@@ -60,14 +62,12 @@ export function useSceneRuntime(sectionRef:RefObject<HTMLElement>,canvasRef:RefO
     observer.observe(section);
     if(reviewNear||warmed()){near=true;start();}
     const visibility=()=>{if(!document.hidden)start();};
-    window.addEventListener('journey-scene-status',visibility);
     const lost=(event:Event)=>{if(!controller)return;event.preventDefault();fail();};
     const restored=()=>{if(retry++<1){failed=false;section.classList.remove("jny-static");start();}};
     document.addEventListener("visibilitychange",visibility);
     canvas.addEventListener("webglcontextlost",lost);canvas.addEventListener("webglcontextrestored",restored);
     return ()=>{
       disposed=true;observer.disconnect();window.removeEventListener('scene-warm',warm);
-      window.removeEventListener('journey-scene-status',visibility);
       document.removeEventListener("visibilitychange",visibility);
       canvas.removeEventListener("webglcontextlost",lost);canvas.removeEventListener("webglcontextrestored",restored);
       release();

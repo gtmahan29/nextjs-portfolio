@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Outfit } from "next/font/google";
 import { ASSURANCES, CONTACT_EMAIL, ENGAGEMENTS, FAQ, PRINCIPLES, TESTIMONIALS } from "./data";
 import ContactForm from "./contact-form";
+import MobileNavigation from "./mobile-navigation";
 import PlanLink from "./plan-link";
 import SoundToggle from "./sound-toggle";
 
@@ -171,15 +172,20 @@ export function WordmarkDefs() {
   );
 }
 
+const JOURNEY_NAV_LINKS = [
+  { href: "#journey", label: "Process" },
+  { href: "#project-archive", label: "Work" },
+  { href: "#studio", label: "Services" },
+  { href: "#pricing", label: "Pricing" },
+  { href: "/about", label: "About" },
+];
+const QUESTIONS_LINK = { href: "#faq", label: "Questions" };
+
 export function JourneyHeader() {
   return (
     <header className="jny-header">
-      <nav aria-label="Primary">
-        <a href="#journey">Process</a>
-        <a href="#project-archive">Work</a>
-        <a href="#studio">Services</a>
-        <a href="#pricing">Pricing</a>
-        <a href="/about">About</a>
+      <nav aria-label="Primary" className="jny-desktop-nav">
+        {JOURNEY_NAV_LINKS.map(({ href, label }) => <a key={href} href={href}>{label}</a>)}
       </nav>
       <div className="jny-header-brand">
         <a className="jny-logo" href="#top" aria-label="Codaine home">
@@ -190,12 +196,13 @@ export function JourneyHeader() {
         <SoundToggle />
       </div>
       <div className="jny-hcta">
-        <a className="jny-pill jny-ghost" href="#faq">
-          Questions
+        <a className="jny-pill jny-ghost" href={QUESTIONS_LINK.href}>
+          {QUESTIONS_LINK.label}
         </a>
         <a className="jny-pill jny-solid" href="#contact">
           Start a project
         </a>
+        <MobileNavigation links={[...JOURNEY_NAV_LINKS, QUESTIONS_LINK]} />
       </div>
     </header>
   );

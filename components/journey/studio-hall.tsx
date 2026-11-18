@@ -67,6 +67,7 @@ export default function StudioHall() {
       {unavailable && <div className="lumen-scene-placeholder" aria-hidden="true" style={{backgroundImage:`url(/models/showroom/poster-${active}.webp)`}} />}
       */}
       <canvas ref={canvasRef} aria-label="A laptop descends and a phone settles onto a floating illuminated platform" role="img" />
+      <p className="svc-preview-status" role="status">Loading 3D preview…</p>
       {/* Original showroom captions, slide navigation and preview controls retained.
       <div className="lumen-caption" key={active}>
         <p className="lumen-eyebrow"><span>0{active + 1}</span>{product.label}</p>

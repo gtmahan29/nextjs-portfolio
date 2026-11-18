@@ -128,12 +128,12 @@ html:has(.jny-root) {
   padding: 0 clamp(16px, 3vw, 34px);
 }
 
-.jny-header nav {
+.jny-header .jny-desktop-nav {
   display: flex;
   gap: clamp(16px, 2.4vw, 32px);
 }
 
-.jny-header nav a {
+.jny-header .jny-desktop-nav a {
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -144,11 +144,11 @@ html:has(.jny-root) {
   transition: opacity 0.3s;
 }
 
-.jny-header nav a:hover {
+.jny-header .jny-desktop-nav a:hover {
   opacity: 1;
 }
 
-.jny-header nav a::after {
+.jny-header .jny-desktop-nav a::after {
   content: "";
   position: absolute;
   left: 0;
@@ -161,7 +161,7 @@ html:has(.jny-root) {
   transition: transform 0.35s cubic-bezier(0.6, 0, 0.2, 1);
 }
 
-.jny-header nav a:hover::after {
+.jny-header .jny-desktop-nav a:hover::after {
   transform: scaleX(1);
   transform-origin: left;
 }
@@ -679,7 +679,7 @@ body:has(.st-review) .jny-header { display: none; }
     height: 66px;
   }
 
-  .jny-header nav {
+  .jny-header .jny-desktop-nav {
     display: none;
   }
 
@@ -1242,12 +1242,12 @@ ul.jny-assure { list-style: none; display: grid; grid-template-columns: repeat(3
 .jny-root ::selection { background: rgba(36, 51, 230, 0.16); }
 
 /* header: quiet sentence-case nav, pills in the page face */
-.jny-header nav a { font-size: 14px; font-weight: 450; letter-spacing: -0.005em; text-transform: none; opacity: 0.7; transition: opacity 0.3s var(--ease-out); }
-.jny-header nav a:hover { opacity: 1; }
-.jny-header nav a::after { bottom: 6px; }
+.jny-header .jny-desktop-nav a { font-size: 14px; font-weight: 450; letter-spacing: -0.005em; text-transform: none; opacity: 0.7; transition: opacity 0.3s var(--ease-out); }
+.jny-header .jny-desktop-nav a:hover { opacity: 1; }
+.jny-header .jny-desktop-nav a::after { bottom: 6px; }
 .jny-pill { height: 42px; padding: 0 20px; font-size: 14px; font-weight: 500; letter-spacing: -0.005em; transition: transform 0.4s var(--ease-out), background 0.35s var(--ease-out), color 0.35s var(--ease-out); }
 .jny-pill:active { transform: scale(0.97); }
-.jny-header .jny-pill:focus-visible, .jny-header nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 999px; }
+.jny-header .jny-pill:focus-visible, .jny-header .jny-desktop-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 999px; }
 
 /* =====================================================================
    Hero: a promise, one physical key, and controls that feel like switches.
@@ -1513,6 +1513,98 @@ ul.jny-assure { list-style: none; display: grid; grid-template-columns: repeat(3
 }
 @media (prefers-reduced-motion: reduce) {
   .jny-sound::before, .jny-sound svg { transition: none; }
+}
+
+.jny-mobile-menu { display: none; }
+
+@media (max-width: 860px) {
+  .jny-mobile-menu {
+    --menu-surface: #f8faff;
+    --menu-ink: var(--jny-ink);
+    --menu-line: #1624431c;
+    display: block;
+    flex: none;
+  }
+  .jny-header-dark .jny-mobile-menu {
+    --menu-surface: #171e34;
+    --menu-ink: #f2f4fb;
+    --menu-line: #edf2ff22;
+  }
+  .jny-root .jny-menu-toggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--menu-surface);
+    color: var(--menu-ink);
+    box-shadow: inset 0 0 0 1px var(--menu-line);
+    touch-action: manipulation;
+    transition: scale .45s var(--ease-spring);
+  }
+  .jny-menu-toggle:active { scale: .96; }
+  .jny-menu-icon { position: relative; width: 18px; height: 18px; }
+  .jny-menu-icon > span {
+    position: absolute;
+    inset: calc(50% - 1px) 0 auto;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transform: translateY(calc((1 - var(--o, 0)) * -4px)) rotate(calc(var(--o, 0) * 45deg));
+  }
+  .jny-menu-icon > span + span {
+    transform: translateY(calc((1 - var(--o, 0)) * 4px)) rotate(calc(var(--o, 0) * -45deg));
+  }
+  .jny-menu-panel {
+    position: absolute;
+    inset-block-start: calc(100% + 6px);
+    inset-inline-end: clamp(12px, 3vw, 24px);
+    width: min(350px, calc(100% - 24px));
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    pointer-events: none;
+    border-radius: 22px;
+    background: var(--menu-surface);
+    color: var(--menu-ink);
+    box-shadow: inset 0 0 0 1px var(--menu-line), 0 14px 36px #0b102029;
+  }
+  .jny-menu-panel:is([data-open], [data-growing]) { visibility: visible; }
+  .jny-menu-panel[data-open] { pointer-events: auto; }
+  .jny-menu-items {
+    max-height: calc(100svh - 92px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px 14px;
+  }
+  .jny-menu-link { display: block; padding-inline: 8px; }
+  .jny-menu-link + .jny-menu-link { border-top: 1px solid var(--menu-line); }
+  .jny-menu-link-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 45px;
+    font-size: 18px;
+    font-weight: 550;
+    letter-spacing: -0.025em;
+  }
+  .jny-menu-toggle:focus-visible, .jny-menu-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 400px) {
+  .jny-header { padding-inline: 12px; }
+  .jny-header .jny-hcta { gap: 6px; }
+  .jny-header .jny-logo { width: clamp(68px, 22vw, 92px); }
+  .jny-header .jny-hcta .jny-solid { padding-inline: clamp(9px, 3.5vw, 14px); white-space: nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jny-root .jny-menu-toggle { transition: none; }
 }
 
 /* =====================================================================
