@@ -165,10 +165,10 @@ export function label(kit: Kit, text: string, { bg = WHITE, fg = INK, w = 256, h
    The scene renders into a target with a depth texture; one full-screen pass then finds where the
    depth's second derivative breaks (silhouettes and creases: an orthographic camera keeps planes
    exactly linear in depth) and lays ink there. One extra draw instead of a hull per mesh. */
-export function createInk(renderer: THREE.WebGLRenderer) {
+export function createInk(renderer: THREE.WebGLRenderer, samples = 4) {
   const depth = new THREE.DepthTexture(2, 2);
   depth.type = THREE.UnsignedIntType;
-  const target = new THREE.WebGLRenderTarget(2, 2, { samples: 4, depthTexture: depth, type: THREE.HalfFloatType });
+  const target = new THREE.WebGLRenderTarget(2, 2, { samples, depthTexture: depth, type: THREE.HalfFloatType });
   target.texture.colorSpace = THREE.LinearSRGBColorSpace;
   const material = new THREE.ShaderMaterial({
     uniforms: {

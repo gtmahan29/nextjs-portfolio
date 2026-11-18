@@ -330,7 +330,9 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
     const textures=new Set<THREE.Texture>();
     scene.traverse(object => { if (object instanceof THREE.Mesh) { object.geometry.dispose(); for (const mat of Array.isArray(object.material)?object.material:[object.material]) { for(const value of Object.values(mat)) if(value instanceof THREE.Texture) textures.add(value); mat.dispose(); } } });
     textures.forEach(texture=>texture.dispose());
-    cloudRenderer.dispose();cloudRenderer.domElement.remove();clouds.dispose(); environment.dispose(); pmrem.dispose(); renderer.dispose(); renderer.domElement.remove();
+    // Both canvases are ours and leave the page: drop their contexts now, not at garbage collection.
+    clouds.dispose(); environment.dispose(); pmrem.dispose(); cloudRenderer.dispose(); renderer.dispose();
+    cloudRenderer.forceContextLoss(); renderer.forceContextLoss(); cloudRenderer.domElement.remove(); renderer.domElement.remove();
   };
 }
 

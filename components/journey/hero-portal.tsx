@@ -110,14 +110,29 @@ export default function HeroPortal() {
   }, []);
 
   useEffect(() => {
-    let disposed = false;
+    const el = host.current, hero = section.current;
+    if (!el || !hero) return;
+    let disposed = false, run = 0;
     let release: (() => void) | undefined;
-    import("./holographic-start-scene").then(async ({ mountStartScene }) => {
-      if (!host.current || disposed) return;
-      release = await mountStartScene(host.current, () => { if (disposed) return; readyRef.current = true; setReady(true); wake(); });
-      if (disposed) release?.();
-    }).catch(() => { (["sky", "key", "frame"] as const).forEach(task => reportLoad(task, 1)); });
-    return () => { disposed = true; release?.(); };
+    const mount = () => {
+      if (disposed || release) return;
+      const id = ++run;
+      import("./holographic-start-scene").then(async ({ mountStartScene }) => {
+        if (disposed || id !== run) return;
+        const done = await mountStartScene(el, () => { if (disposed || id !== run) return; readyRef.current = true; setReady(true); wake(); });
+        if (disposed || id !== run) done(); else release = done;
+      }).catch(() => { (["sky", "key", "frame"] as const).forEach(task => reportLoad(task, 1)); });
+    };
+    const unmount = () => { run++; release?.(); release = undefined; };
+    // Phones: the hero holds two WebGL contexts, a model and cloud textures. Once the visitor
+    // is far down the page it gives them back, so the scenes below have room, and rebuilds
+    // while the visitor scrolls back up.
+    const constrained = matchMedia("(any-pointer: coarse) and (max-width: 860px)").matches;
+    // Builds within a screen and a half, releases beyond three: no rebuilds at the edge.
+    const near = constrained ? new IntersectionObserver(([entry]) => { if (entry.isIntersecting) mount(); }, { rootMargin: `${innerHeight * 1.5}px 0px` }) : undefined;
+    const keeper = constrained ? new IntersectionObserver(([entry]) => { if (!entry.isIntersecting) unmount(); }, { rootMargin: `${innerHeight * 3}px 0px` }) : undefined;
+    if (near && keeper) { near.observe(hero); keeper.observe(hero); } else mount();
+    return () => { disposed = true; near?.disconnect(); keeper?.disconnect(); unmount(); };
   }, []);
 
   return <><section ref={section} className="hero-portal hero-start" aria-label="Start your journey">

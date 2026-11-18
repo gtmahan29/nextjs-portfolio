@@ -56,16 +56,17 @@ const YAW_MIN = HOME_YAW - Math.PI / 2, YAW_MAX = HOME_YAW + Math.PI / 2;
 const RAIL_R = 3.25, RAIL_Y = 0.42, WALK_R = 3.62;
 
 export function createStackWorld(canvas: HTMLCanvasElement, pill: HTMLElement, noteEl: HTMLElement, events: WorldEvents, opts: { freeLeft: () => number }): World {
+  const coarse = matchMedia("(pointer: coarse)").matches;
   let renderer: THREE.WebGLRenderer;
   try {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: "high-performance" });
+    // Phones share GPU memory with the page: ask for the default GPU, not the fast one.
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: coarse ? "default" : "high-performance" });
   } catch {
     events.onFail();
     return { select() {}, show() {}, closeNote() {}, send() {}, dispose() {} };
   }
-  const coarse = matchMedia("(pointer: coarse)").matches;
   // Desktop renders at least 1.5× and lets the browser downsample: the ink lines stay smooth on 1× screens.
-  const dpr = coarse ? Math.min(window.devicePixelRatio || 1, 1.6) : Math.min(2, Math.max(1.5, window.devicePixelRatio || 1));
+  const dpr = coarse ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(2, Math.max(1.5, window.devicePixelRatio || 1));
   renderer.setPixelRatio(dpr);
   renderer.setClearColor(0x000000, 0);
   renderer.shadowMap.enabled = true;
@@ -81,7 +82,8 @@ export function createStackWorld(canvas: HTMLCanvasElement, pill: HTMLElement, n
   const kit = new Kit();
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 18, 72);
-  const ink = createInk(renderer);
+  // The ink pass keeps a multisampled half-float copy of the frame; phones take two samples, not four.
+  const ink = createInk(renderer, coarse ? 2 : 4);
 
   // Light: a warm key from the back left (tops lit, left faces mid, right faces in shade),
   // and a cool sky so shadows stay coloured rather than grey.
@@ -629,6 +631,8 @@ export function createStackWorld(canvas: HTMLCanvasElement, pill: HTMLElement, n
       envTarget.dispose();
       ink.dispose();
       renderer.dispose();
+      // Give back the drawing buffer now instead of whenever the canvas is collected.
+      canvas.width = canvas.height = 1;
     },
   };
 }

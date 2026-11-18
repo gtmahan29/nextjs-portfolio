@@ -23,7 +23,9 @@ export default function OpalKeyboard(){
     import('three'),import('three/examples/jsm/loaders/GLTFLoader.js'),import('./opal-keyboard-rig')
    ]);
    if(disposed)return;
-   const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
+   // Phones share one memory pool between the page and the GPU: a lighter canvas and shadow there.
+   const phone=matchMedia('(any-pointer: coarse) and (max-width: 860px)').matches;
+   const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:phone?'default':'high-performance'});
    renderer.setClearColor(0x000000,0);renderer.outputColorSpace=THREE.SRGBColorSpace;
    renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
    renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -45,7 +47,7 @@ export default function OpalKeyboard(){
    cards.forEach(panel=>{panel.geometry.dispose();(panel.material as InstanceType<typeof THREE.MeshBasicMaterial>).dispose();});pmrem.dispose();
    scene.add(new THREE.HemisphereLight(0xffffff,0x364358,.12));
    const key=new THREE.DirectionalLight(0xfffaf4,1.8);key.position.set(-5,9,5);key.castShadow=true;
-   key.shadow.mapSize.set(4096,2048);Object.assign(key.shadow.camera,{left:-12,right:12,top:8,bottom:-8,near:.5,far:40});
+   key.shadow.mapSize.set(phone?2048:4096,phone?1024:2048);Object.assign(key.shadow.camera,{left:-12,right:12,top:8,bottom:-8,near:.5,far:40});
    key.shadow.bias=-.00015;key.shadow.normalBias=.015;key.shadow.radius=6;scene.add(key);
    const fill=new THREE.DirectionalLight(0xe2edff,.42);fill.position.set(5,7,-6);scene.add(fill);
    const cyan=new THREE.PointLight(0x38dfff,5,10,2);cyan.position.set(-6,1,0);scene.add(cyan);
@@ -66,7 +68,7 @@ export default function OpalKeyboard(){
    let model:Group|undefined,rig:ReturnType<typeof createOpalKeyboardRig>|undefined;
    const resize=()=>{
     const width=node.clientWidth,height=node.clientHeight;if(!width||!height)return;
-    renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio||1,2.5),3,Math.sqrt(6000000/(width*height))));renderer.setSize(width,height,false);
+    renderer.setPixelRatio(phone?Math.min(window.devicePixelRatio||1,2):Math.min(Math.max(window.devicePixelRatio||1,2.5),3,Math.sqrt(6000000/(width*height))));renderer.setSize(width,height,false);
     const aspect=width/height;camera.aspect=aspect;camera.updateProjectionMatrix();
     // Frame the board's 20-unit width with a little air on each side.
     distance=11.6/(Math.tan(THREE.MathUtils.degToRad(17/2))*aspect);
@@ -103,7 +105,7 @@ export default function OpalKeyboard(){
     observer.disconnect();rig?.dispose();
     const materials=new Set<Material>(),geometries=new Set<BufferGeometry>();
     scene.traverse(object=>{if(object instanceof THREE.Mesh){geometries.add(object.geometry);(Array.isArray(object.material)?object.material:[object.material]).forEach(m=>materials.add(m));}});
-    geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());grain.dispose();contactTexture.dispose();environment.dispose();renderer.dispose();renderer.domElement.remove();
+    geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());grain.dispose();contactTexture.dispose();environment.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();
    };
    resize();
    try{
