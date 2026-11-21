@@ -38,3 +38,18 @@ next-env.d.ts
 
 # local agent skills (installed from ~/.agents/skills, not source code)
 /.qoder/
+
+# Blender autosave backups
+*.blend1
+
+# local tool output, experiments and previews (not part of the site)
+/.claude/
+/.img2threejs/
+/.performance/
+/img2threejs-main/
+/img2threejs-main.zip
+/app/door-lab/
+/components/door-lab/
+/app/about/_previous/
+/*.png
+/*.jpg
