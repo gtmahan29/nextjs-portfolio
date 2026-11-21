@@ -1,14 +1,23 @@
 import * as THREE from "three";
 import {CASE_VISIBILITY_EVENT, isCaseStudyOpen} from "./case-scene-visibility";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
+import { C_PATH } from "./loader-art";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { createHeroClouds } from "./hero-clouds";
+import { createStartMotion, HERO } from "./hero-start-motion";
 import { createPressImpact } from "./start-press-impact";
-import { createStartMotion } from "./hero-start-motion";
 import { createSpring } from "./motion-curve";
 import { play } from "./sfx";
 import { reportLoad } from "./page-loader";
 import { getSceneQuality, scenePixelRatio } from "./scene-quality";
+
+/** The cap stands this much taller out of its chassis (model units): a longer, deeper press. */
+const RAISE = .32, CUT = 1.7, CAP_TRAVEL = .55 + RAISE;
+/** The Codaine app tile (white C on ink) stacked above "Start" on the cap (model units, on its top face). */
+const TILE = .8, TILE_RADIUS = .24, MARK_H = .48, MARK_X = -.0045, MARK_Z = -.242, TEXT_SHIFT_Z = .541;
+/** The flight: how far up (screens) and back (units) the key goes, and how much of that the camera follows. */
+const RISE = .34, DEPTH = 18, FOLLOW = .4, FOLLOW_LAG = .32;
 
 export async function mountStartScene(host: HTMLDivElement, onReady: () => void) {
   const quality = getSceneQuality();
@@ -21,7 +30,6 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
   host.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
   scene.background = null;
-  const impact=createPressImpact(scene);
   const camera = new THREE.PerspectiveCamera(32, 1, .1, 100);
   const pmrem = new THREE.PMREMGenerator(renderer);
   const room = new RoomEnvironment();
@@ -42,6 +50,7 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
   const content=host.querySelector<HTMLElement>(".hero-start-next");
   const hit=section.querySelector<HTMLButtonElement>(".hero-start-hit");
   const motion=createStartMotion();
+  const impact=createPressImpact();
   const activate=()=>motion.activate();section.addEventListener("hero-start-activate",activate);
   // Touch, mouse and keyboard all drive the same physical switch.
   let hoverOn=false;
@@ -90,7 +99,8 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
   const cameraSpace=new THREE.Vector3(),faceCamera=new THREE.Quaternion(),tumble=new THREE.Quaternion();
   const tumbleEuler=new THREE.Euler();
   const topFacing=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/2);
-  let viewportHeight=7,modelReady=false;
+  let viewportHeight=7,modelReady=false,camDist=12;
+  const camBase=new THREE.Vector3(),camFollow=new THREE.Vector3(),followGoal=new THREE.Vector3(),camOffset=new THREE.Vector3(),FLIGHT_BASE=new THREE.Vector3(0,.65,0);
   let lastLift=0;
   const squash=createSpring(0);let lastBow=0;
   pivot.scale.setScalar(.64);
@@ -128,9 +138,12 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
     camera.aspect=width/height;
     const distance = camera.aspect < 1 ? 12.5 / camera.aspect ** .35 : 11.8;
     camera.position.set(distance*.57,distance*.64,distance*.68);
-    camera.lookAt(0,.72,0); camera.updateProjectionMatrix();camera.updateMatrixWorld(true);
-    viewportHeight=2*camera.position.distanceTo(new THREE.Vector3(0,.72,0))*Math.tan(THREE.MathUtils.degToRad(16));
-    flightPath.v2.set(0,viewportHeight*.20,-3.6);flightPath.v3.set(0,viewportHeight*.18,-3.8);
+    camera.lookAt(0,.72,0); camera.updateProjectionMatrix();camBase.copy(camera.position);
+    camera.position.add(camOffset.copy(camFollow).applyQuaternion(camera.quaternion));camera.updateMatrixWorld(true);
+    camDist=camBase.distanceTo(new THREE.Vector3(0,.72,0));
+    viewportHeight=2*camDist*Math.tan(THREE.MathUtils.degToRad(16));
+    // Up into the sky and far back into it: the key shrinks as it goes, easing in and out.
+    flightPath.v2.set(0,viewportHeight*RISE,-DEPTH*.8);flightPath.v3.set(0,viewportHeight*RISE*.94,-DEPTH);
     faceCamera.copy(camera.quaternion).multiply(topFacing);
     clouds.resize(camera.aspect);
   };
@@ -178,18 +191,25 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
       if(event==="contact"&&!reduced)squash.kick(3.2);
     }
     // The launch has one sound: air, as the key leaves its mount.
-    if(state.real&&lastLift<=.04&&state.lift>.04)play("key_whoosh");
+    // Launch: one whoosh, and the key stretches along its path for a moment (the squash spring, reversed).
+    if(state.real&&lastLift<=.02&&state.lift>.02){play("key_whoosh");if(!reduced)squash.kick(-2.6);}
     lastLift=state.lift;
     if(modelReady&&readyAt<0)readyAt=time;
     let springsMoving=false;
-    if(readyAt>=0&&(reduced||time-readyAt>220)){if(reduced)entry.snap(1);else springsMoving=entry.step(1,dt)||springsMoving;}
+    if(readyAt>=0&&(reduced||time-readyAt>220)){if(reduced){if(entry.value!==1)cloudDirty=true;entry.snap(1);}else springsMoving=entry.step(1,dt)||springsMoving;}
     const hovered=hoverOn||state.mode==="held";
     if(reduced)glow.snap(hovered?1:0);else springsMoving=glow.step(hovered?1:0,dt)||springsMoving;
     const e=entry.value;
-    const storyVisible=state.contentOpacity>.005||(state.units>=2.12&&state.units<=6.35);
+    const storyVisible=state.contentOpacity>.005||(state.units>=HERO.story&&state.units<=HERO.storyEnd);
     section.dispatchEvent(new CustomEvent("hero-story-frame",{detail:{units:state.units,visible:storyVisible,contentOpacity:state.contentOpacity,reduced}}));
-    const pressHeight=.10-.55*state.cap;
-    const moving=springsMoving||state.active||Math.abs(state.units-lastUnits)>.0001||Math.abs(pivot.rotation.x-targetX*(1-state.lift))+Math.abs(pivot.rotation.y-targetY*(1-state.lift))>.001;
+    const pressHeight=.10-CAP_TRAVEL*state.cap;
+    // The camera chases the key at a fraction of its travel, a beat behind: the key outruns it.
+    flightPath.getPoint(state.lift,cameraSpace);
+    followGoal.copy(cameraSpace).multiplyScalar(FOLLOW);
+    if(reduced||review)camFollow.copy(followGoal);else camFollow.lerp(followGoal,1-Math.exp(-dt/FOLLOW_LAG));
+    if(camFollow.distanceToSquared(followGoal)<1e-8)camFollow.copy(followGoal);
+    const cameraMoving=!camFollow.equals(followGoal);
+    const moving=cameraMoving||springsMoving||state.active||Math.abs(state.units-lastUnits)>.0001||Math.abs(pivot.rotation.x-targetX*(1-state.lift))+Math.abs(pivot.rotation.y-targetY*(1-state.lift))>.001;
     if(!moving&&!cloudDirty&&!flight.visible&&cloudCoverage<.001&&state.contentOpacity===1&&content?.style.opacity==="1")return;
     const interval=moving?1000/60:1000/30;
     if(time-lastRender < interval-1 || (reduced&&!moving&&!cloudDirty)) return;
@@ -201,11 +221,13 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
     pivot.rotation.y=THREE.MathUtils.lerp(pivot.rotation.y,targetY*pointerGain,follow);
     pivot.rotation.x=THREE.MathUtils.lerp(pivot.rotation.x,targetX*pointerGain,follow);
     pivot.rotation.z=0;
-    flightPath.getPoint(state.lift,cameraSpace);
-    cameraSpace.y-=viewportHeight*1.20*state.drop+state.impulse;
+    // The further back the key is, the further it has to fall to leave the frame.
+    const depthScale=(camDist-(cameraSpace.z-camFollow.z))/camDist;
+    cameraSpace.y-=viewportHeight*1.20*state.drop*depthScale+state.impulse;
     cameraSpace.z+=.60*state.drop;
     cameraSpace.applyQuaternion(camera.quaternion);
-    flight.position.copy(cameraSpace).add(new THREE.Vector3(0,.65,0));
+    flight.position.copy(cameraSpace).add(FLIGHT_BASE);
+    camera.position.copy(camBase).add(camOffset.copy(camFollow).applyQuaternion(camera.quaternion));
     flight.quaternion.identity().slerp(faceCamera,state.lift);
     const turn=reduced?state.drop*.16:state.fallTime;
     tumble.setFromEuler(tumbleEuler.set(1.25*turn,-.46*turn,.10*turn));
@@ -224,8 +246,8 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
     const bow=.05*sq;pivot.rotation.x+=bow-lastBow;lastBow=bow;
     pivot.position.y=-.65-(1-Math.min(1,e))*.9;
     if(edgeMaterial){const flash=state.impact>=0?(1-state.impact)**2:0;edgeMaterial.emissiveIntensity=2.2+1.5*Math.max(0,glow.value)+3*flash;}
+    impact.update(state.impact,reduced);
     const capText=Math.max(0,state.cap).toFixed(3);if(capText!==lastCap){lastCap=capText;section.style.setProperty("--cap",capText);}
-    impact.update(-1,reduced);
     if(content){content.style.opacity='1';content.style.visibility=storyVisible?'visible':'hidden';content.style.transform='none';content.setAttribute("aria-hidden",String(!storyVisible));}
     if(hit){hit.disabled=!state.interactive;hit.style.pointerEvents=state.interactive?"auto":"none";hit.setAttribute("aria-hidden",String(state.units>.25));}
     if(Math.abs(cloudScroll-state.lift*.18)+Math.abs(cloudCoverage-state.cloudCoverage)+Math.abs(cloudArrival-state.cloudArrival)+Math.abs(whiteout-state.whiteout)>.0001){
@@ -312,7 +334,44 @@ export async function mountStartScene(host: HTMLDivElement, onReady: () => void)
       if (["Glass button","Glass upper specular edge","Cyan lower optical edge","Start inscription","Optical inner core"].includes(name)) moving.push(object);
     });
     moving.forEach(object=>press.attach(object));
-    impact.bind(press);
+    // A taller cap: everything above the middle of its walls moves up, so the walls grow and the
+    // bevels and the face keep their shape.
+    press.updateMatrixWorld(true);
+    const vertex=new THREE.Vector3(),toPress=new THREE.Matrix4(),fromPress=new THREE.Matrix4();
+    press.traverse(object=>{
+      if(!(object instanceof THREE.Mesh))return;
+      toPress.copy(press.matrixWorld).invert().multiply(object.matrixWorld);fromPress.copy(toPress).invert();
+      const position=object.geometry.attributes.position as THREE.BufferAttribute;
+      for(let i=0;i<position.count;i++){
+        vertex.fromBufferAttribute(position,i).applyMatrix4(toPress);
+        if(vertex.y>CUT){vertex.y+=RAISE;vertex.applyMatrix4(fromPress);position.setXYZ(i,vertex.x,vertex.y,vertex.z);}
+      }
+      position.needsUpdate=true;object.geometry.computeBoundingBox();object.geometry.computeBoundingSphere();
+    });
+    // The brand beside the word: the Codaine app tile, its C in the cap's own lettering material.
+    const inscription=press.getObjectByName("Start_inscription")??press.getObjectByName("Start inscription");
+    if(inscription instanceof THREE.Mesh&&!Array.isArray(inscription.material)){
+      const face=inscription.position.y+RAISE;
+      const flat=(geometry:THREE.BufferGeometry)=>geometry.rotateX(Math.PI/2);
+      const outline=new THREE.Shape(),h=TILE/2,r=TILE_RADIUS;
+      outline.moveTo(-h+r,-h);outline.lineTo(h-r,-h);outline.quadraticCurveTo(h,-h,h,-h+r);outline.lineTo(h,h-r);outline.quadraticCurveTo(h,h,h-r,h);
+      outline.lineTo(-h+r,h);outline.quadraticCurveTo(-h,h,-h,h-r);outline.lineTo(-h,-h+r);outline.quadraticCurveTo(-h,-h,-h+r,-h);
+      // Kept out of the glass transmission capture, like the lettering, so it is not refracted twice.
+      const tileMaterial=new THREE.MeshPhysicalMaterial({color:0x120b22,roughness:.42,metalness:0,clearcoat:.35,clearcoatRoughness:.2,envMapIntensity:.3,side:THREE.DoubleSide,transparent:true,opacity:1});
+      const tile=new THREE.Mesh(flat(new THREE.ShapeGeometry(outline,8)),tileMaterial);
+      tile.name="Codaine tile";tile.renderOrder=10;tile.position.set(MARK_X,face+.0006,MARK_Z);
+      const shapes=new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${C_PATH}"/></svg>`).paths.flatMap(path=>SVGLoader.createShapes(path));
+      const markGeometry=new THREE.ShapeGeometry(shapes,10),k=MARK_H/366;
+      markGeometry.translate(-148.5,-198,0);markGeometry.scale(k,k,1);flat(markGeometry);
+      const markMaterial=inscription.material.clone();markMaterial.side=THREE.DoubleSide;
+      markMaterial.polygonOffset=true;markMaterial.polygonOffsetFactor=-2;markMaterial.polygonOffsetUnits=-2;
+      const mark=new THREE.Mesh(markGeometry,markMaterial);
+      mark.name="Codaine mark";mark.renderOrder=11;mark.position.set(MARK_X,face+.0012,MARK_Z);
+      inscription.position.z+=TEXT_SHIFT_Z;
+      press.add(tile,mark);
+    }
+    // The press ripples out over the still surface the key stands on (its foundation, in the world).
+    impact.bind(scene,2.325*.64,0);
     press.position.y=initialPress;
     renderHero();
     modelReady=true;renderer.domElement.dataset.modelReady="true"; onReady();

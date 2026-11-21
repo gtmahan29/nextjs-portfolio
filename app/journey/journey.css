@@ -829,7 +829,7 @@ body:has(.st-review) .jny-header { display: none; }
   .hero-primary { transition:none; }
 }
 
-.hero-portal.hero-start { height:800svh; min-height:4200px; background:#fff; overflow:clip; }
+.hero-portal.hero-start { height:750svh; min-height:3940px; background:#fff; overflow:clip; }
 .hero-start-viewport { position:sticky; top:0; height:100svh; min-height:560px; }
 .hero-start-scene { position:absolute; inset:0; }
 /* The sky is full-bleed from the first frame; the page loader owns the opening. */
@@ -1781,6 +1781,10 @@ ul.jny-assure { list-style: none; display: grid; grid-template-columns: repeat(3
    --------------------------------------------------------------------------- */
 @property --glow { syntax: "<color>"; inherits: true; initial-value: #f59e0b; }
 html[data-loading="true"] { overflow: hidden; }
+html[data-seen] .pl-root { display: none; }
+/* Keyboard users can jump past the 3D journey; invisible until focused. */
+.jny-skip { position: fixed; left: 16px; top: 12px; z-index: 1000; padding: 10px 18px; border-radius: 999px; background: #132034; color: #fff; font-weight: 600; text-decoration: none; transform: translateY(-160%); }
+.jny-skip:focus-visible { transform: none; outline: 2px solid #8fb4ff; outline-offset: 3px; }
 .pl-root {
   --pl-e: var(--pl-ease, cubic-bezier(.3, 1.3, .5, 1));
   --pad: clamp(20px, 2.6vw, 40px);

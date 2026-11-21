@@ -179,7 +179,11 @@ function Questions() {
       now = i; since = 0; caught = false;
       wake();
     };
-    return () => { leave(); stop(); qMotion.dispose(); aMotion.dispose(); };
+    // The bubbles follow their text: a font swap or a resize after they settled re-measures them.
+    const resized = new ResizeObserver(() => wake());
+    [reply, ...qPages, ...aPages].forEach(node => resized.observe(node));
+    document.fonts?.ready.then(() => wake());
+    return () => { leave(); stop(); resized.disconnect(); qMotion.dispose(); aMotion.dispose(); };
   }, []);
 
   const ask = (i: number) => {

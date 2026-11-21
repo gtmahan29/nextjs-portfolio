@@ -184,6 +184,7 @@ const QUESTIONS_LINK = { href: "#faq", label: "Questions" };
 export function JourneyHeader() {
   return (
     <header className="jny-header">
+      <a className="jny-skip" href="#work">Skip to the work</a>
       <nav aria-label="Primary" className="jny-desktop-nav">
         {JOURNEY_NAV_LINKS.map(({ href, label }) => <a key={href} href={href}>{label}</a>)}
       </nav>

@@ -4,7 +4,9 @@ import OpalKeyboard from "./opal-keyboard";
 import { createStagedMotion, BEFORE } from "./staged-motion";
 import { createBeatGovernor } from "./beat-governor";
 import { Words, pop } from "./staged-words";
-import { SPRING_PEAK, springCurve } from "./motion-curve";
+import { SPRING_PEAK, springCurve, createSpring } from "./motion-curve";
+import { popped } from "./studio-kit";
+import { HERO } from "./hero-start-motion";
 import { play } from "./sfx";
 import "./build-story.css";
 
@@ -38,6 +40,16 @@ import "./build-story.css";
  * | 2    | spring curve card       | P3, P16 | curve draws, a dot rides it  | 420; 600          | until 2 |                  |
  * | 3    | phone                   | P3+trav | slides out from behind       | 300               | until 3 | ui_pop @.16+PEAK |
  * | 3    | live toast, signups     | P3      | after the cursor's click     | 2100, 2500        | until 3 |                  |
+ *
+ * MOTION SCORE — the stage arriving (after the Start key has fallen through the clouds)
+ * | When                 | Element      | Pattern | Goal                                    | Timing                    | Sound            |
+ * |----------------------|--------------|---------|-----------------------------------------|---------------------------|------------------|
+ * | after the key's fall | keyboard     | P12     | rises from below on the shared spring,  | spring; overshoot ×1.8    | –                |
+ * |                      |              |         | carries on past its place (~9%), tilts  | (about 90 px past, then   |                  |
+ * |                      |              |         | back a touch, and settles               | caught)                   |                  |
+ * | beat 0, keyboard 60% | window       | P3      | pops up out of the keyboard (scale from | spring, k 2.5             | ui_pop @ PEAK    |
+ * |                      |              |         | its bottom edge), outline drawing       |                           |                  |
+ * | leaving (HERO.leave) | both         | –       | out with the returning clouds           | scroll                    | –                |
  * Reduced motion: every part snaps to its beat; the curve dot rests at the end.
  * Phone / narrow (≤1180px): only crop marks and rulers; the cards would crowd the screen.
  */
@@ -49,6 +61,8 @@ const beatOf = (p: number) => { let beat = BEFORE; BEAT_AT.forEach((at, i) => { 
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
 const ease = (v: number) => { const t = clamp(v); return t * t * (3 - 2 * t); };
 const silk = (v: number) => { const x = clamp(v); return x * x * x * (x * (x * 6 - 15) + 10); };
+/** How far the keyboard carries on past its place (spring overshoot gain), and when the window pops. */
+const KEY_OVERSHOOT = 1.8, POP_AT = .6;
 
 /** A wireframe placeholder: lands at beat 1, is wiped away at beat 2. */
 const Wire = ({ order, children }: { order: number; children?: React.ReactNode }) =>
@@ -186,6 +200,10 @@ export default function IsometricStory() {
     const motion = createStagedMotion(Array.from(host.querySelectorAll<HTMLElement>("[data-beat]")), { lag: 0.16 });
     const governor = createBeatGovernor({ last: BEAT_AT.length - 1 });
     let beat = BEFORE, last = performance.now(), beatAt = 0, typed = "", demoKey = -1, hidden = true;
+    // The keyboard and the window each arrive on the shared spring.
+    let windowOn = false;
+    const windowPop = createSpring(0), keyArrive = createSpring(0);
+    display.style.transformOrigin = "50% 100%";
 
     // The keyboard reports every letter it has actually pressed; the page shows exactly those.
     const onTyped = (event: Event) => {
@@ -200,21 +218,22 @@ export default function IsometricStory() {
     keyboard.addEventListener("iso-typed", onTyped);
 
     const update = (e: Event) => {
-      const { units, reduced, visible } = (e as CustomEvent<{ units: number; reduced: boolean; visible: boolean }>).detail;
+      const { units, reduced, visible, contentOpacity } = (e as CustomEvent<{ units: number; reduced: boolean; visible: boolean; contentOpacity: number }>).detail;
       const now = performance.now(), dt = Math.min(0.25, (now - last) / 1000); last = now;
       if (!visible) {
         // Off stage: put every element back where it waits, so the next visit starts from nothing.
         governor.step(BEFORE, 0, false, true);
-        if (!hidden) { hidden = true; host.style.visibility = "hidden"; beat = BEFORE; motion.update(BEFORE, 0, true); typed = ""; headline.textContent = ""; }
+        if (!hidden) { hidden = true; host.style.visibility = "hidden"; beat = BEFORE; motion.update(BEFORE, 0, true); typed = ""; headline.textContent = ""; windowOn = false; windowPop.snap(0); keyArrive.snap(0); }
         return;
       }
       if (hidden) { hidden = false; host.style.visibility = ""; }
-      const p = reduced ? 1 : clamp((units - 2.12) / 3.02), entry = ease(p / 0.15);
+      const p = reduced ? 1 : clamp((units - HERO.story) / HERO.storySpan), entry = ease(p / 0.15);
       // A fast flick plays the skipped beats in order instead of snapping past them.
       const next = governor.step(beatOf(p), dt, true, reduced);
       if (next !== beat) {
         // Beat 2 is heard through the typing itself.
-        if (next > beat && next >= 0 && !reduced) play("ui_pop", 0.16 + SPRING_PEAK);
+        // Beat 0 is heard when the window pops (below).
+        if (next > beat && next >= 1 && !reduced) play("ui_pop", 0.16 + SPRING_PEAK);
         beat = next; beatAt = now; demoKey = -1;
         host.dataset.stage = beat < 0 ? "nothing" : ["frame", "wireframe", "design", "complete"][beat];
       }
@@ -228,11 +247,20 @@ export default function IsometricStory() {
       }
 
       // Keyboard and display travel together with scroll: in from below, out with the clouds.
-      const arrival = reduced ? 1 : silk(p / 0.16), anticipation = reduced ? 0 : ease((units - 5.25) / 0.18), departure = reduced ? 0 : silk((units - 5.43) / 0.69);
-      const clearance = window.innerHeight * 1.05 + keyboard.offsetHeight * 0.15;
+      // The keyboard comes up once the key has fallen through the clouds; it goes past its place and is caught.
+      const keyGoal = reduced || contentOpacity > .02 ? 1 : 0;
+      if (reduced) keyArrive.snap(keyGoal); else keyArrive.step(keyGoal, dt);
+      const arrival = reduced ? 1 : popped(keyArrive.value, KEY_OVERSHOOT), settled = clamp(arrival);
+      const nextWindow = beat >= 0 && (reduced || arrival >= POP_AT);
+      if (nextWindow && !windowOn && !reduced) play("ui_pop", SPRING_PEAK);
+      windowOn = nextWindow;
+      if (reduced) windowPop.snap(windowOn ? 1 : 0); else windowPop.step(windowOn ? 1 : 0, dt);
+      const lift = popped(windowPop.value, 2.5);
+      const anticipation = reduced ? 0 : ease((units - (HERO.leave - .2)) / 0.18), departure = reduced ? 0 : silk((units - (HERO.leave - .02)) / 0.69);
+      const clearance = window.innerHeight * .8 + keyboard.offsetHeight * 0.15;
       const y = (1 - arrival) * clearance - 14 * anticipation + departure * clearance;
-      keyboard.style.transform = `translate(-50%,-50%) perspective(1400px) translate3d(${18 * Math.sin(Math.PI * arrival) + 12 * departure}px,${y}px,${-45 * (1 - arrival) - 65 * departure}px) rotateX(${20 * (1 - arrival) - 4 * anticipation + 22 * departure}deg) rotateZ(${-2.5 * (1 - arrival) + 2 * departure}deg) scale(${0.97 + 0.03 * arrival - 0.025 * departure})`;
-      display.style.transform = `translate(-50%,-50%) perspective(1600px) translate3d(0,${-departure * window.innerHeight * 0.9}px,0) rotateX(${-10 * departure}deg)`;
+      keyboard.style.transform = `translate(-50%,-50%) perspective(1400px) translate3d(${18 * Math.sin(Math.PI * settled) + 12 * departure}px,${y}px,${-45 * (1 - arrival) - 65 * departure}px) rotateX(${20 * (1 - arrival) - 4 * anticipation + 22 * departure}deg) rotateZ(${-2.5 * (1 - arrival) + 2 * departure}deg) scale(${0.97 + 0.03 * settled - 0.025 * departure})`;
+      display.style.transform = `translate(-50%,-50%) perspective(1600px) translate3d(0,${-departure * window.innerHeight * 0.9 + 40 * (1 - Math.min(1, lift))}px,0) rotateX(${-10 * departure}deg) scale(${lift.toFixed(4)})`;
 
       // Beat 1 taps out a short rhythm as the blocks land; beat 2 types the headline for real.
       const since = (now - beatAt) / 1000;

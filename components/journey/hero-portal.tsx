@@ -32,10 +32,12 @@ Input is held from the press until the story has landed, then handed back.
 |-------|------------------------------------------------------------|-----------------------------------|
 | 0     | cap bottoms out (thock)                                    | held where it is                  |
 | ~.1   | release: cap tops out (clack)                              | held                              |
-| .34   | the key lifts toward the sky (whoosh)                      | travels to 1.24 screens, 1.7 s    |
-| ~2.3  | it hangs at the top for a breath                           | rests .22 s                       |
-| ~2.5  | it falls through the clouds; the story arrives             | travels to 2.64 screens, 2.0 s    |
-| ~4.5  | settled on "From nothing."; scrolling is the visitor's    | unlocked                          |
+| .22   | the clouds part; the key climbs up and back into the sky,  | travels to .95 screens, 1.7 s     |
+|       | 1.6 s ease-in-out on its own clock (whoosh)                |                                   |
+| ~2.0  | it hangs at the top for a breath                           | rests .3 s                        |
+| ~2.3  | it falls through the clouds; the story arrives, the        | travels to 2.0 screens, 2.0 s     |
+|       | keyboard springs up past its place and settles             |                                   |
+| ~4.3  | settled on "From nothing."; scrolling is the visitor's     | unlocked                          |
 Each leg travels on the shared spring curve. Reduced motion: one jump to the story.
 Reduced motion: every node snaps; magnetic pull is off.
 Phone: title and copy shrink.
@@ -154,9 +156,9 @@ export default function HeroPortal() {
       const top = hero.getBoundingClientRect().top + window.scrollY, screen = host.current.clientHeight;
       hero.setAttribute("data-playing", "");
       playScroll([
-        { top: window.scrollY, duration: .01, hold: .34 },
-        { top: top + screen * 1.24, duration: 1.7, hold: .22 },
-        { top: top + screen * 2.64, duration: 2 },
+        { top: window.scrollY, duration: .01, hold: .22 },
+        { top: top + screen * .95, duration: 1.7, hold: .3 },
+        { top: top + screen * 2.0, duration: 2 },
       ]).then(() => hero.removeAttribute("data-playing"));
     }} />
     <div className="hero-start-copy">

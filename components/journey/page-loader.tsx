@@ -62,6 +62,9 @@ const STATUS = [
   { text: "Ready", color: "#241839" },
 ];
 const TICKS = [0, .2, .4, .6, .8, 1];
+const SEEN = "codaine-loaded";
+/** Runs before first paint: on a repeat visit the loader is hidden before it can flash. */
+const SEEN_SCRIPT = `try{if(sessionStorage.getItem("${SEEN}"))document.documentElement.dataset.seen="1"}catch(e){}`;
 
 export default function PageLoader() {
   const root = useRef<HTMLDivElement>(null);
@@ -74,6 +77,14 @@ export default function PageLoader() {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const hold = process.env.NODE_ENV !== "production" && new URLSearchParams(location.search).has("loaderHold");
     const html = document.documentElement;
+    // Seen once this session: no loader, the hero is on screen at once.
+    if (!hold && html.dataset.seen) {
+      const warm = () => { (window as unknown as { __sceneWarm?: boolean }).__sceneWarm = true; window.dispatchEvent(new Event("scene-warm")); };
+      if ("requestIdleCallback" in window) window.requestIdleCallback(warm, { timeout: 2000 }); else setTimeout(warm, 1000);
+      setGone(true);
+      return;
+    }
+    try { sessionStorage.setItem(SEEN, "1"); } catch { /* storage unavailable */ }
     html.dataset.loading = "true";
     window.dispatchEvent(new CustomEvent("smooth-scroll-hold", { detail: true }));
     const start = performance.now();
@@ -175,6 +186,8 @@ export default function PageLoader() {
 
   if (gone) return null;
   return (
+    <>
+    <script dangerouslySetInnerHTML={{ __html: SEEN_SCRIPT }} />
     <div ref={root} className="pl-root" role="status" aria-label="Loading Codaine" style={{ "--pl-ease": EASE } as React.CSSProperties}>
       <div className="pl-glow" aria-hidden="true" />
       <div className="pl-top">
@@ -215,5 +228,6 @@ export default function PageLoader() {
         </div>
       </div>
     </div>
+    </>
   );
 }
